@@ -1,0 +1,28 @@
+ul li{
+    display: inline;
+    list-style-type: none;
+  }
+
+.navigation{
+  display: inline-block;
+  padding: 10px;;
+}
+.logo{
+  text-align: left;
+  padding-right: 250px;
+  font-family: IM Fell DW Pica SC;
+  font-size: 28px;
+}
+.cart{
+  padding-left: 800px;
+}
+.headerText{
+  padding-right: 68px;
+  text-align: right;
+  font-family: Alata;
+  font-weight:300;
+  font-size: 18px;
+}
+.header{
+  background-color: #E6CCA9;
+}
