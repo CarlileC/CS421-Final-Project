@@ -26,3 +26,48 @@ ul li{
 .header{
   background-color: #E6CCA9;
 }
+.coffeePicture{
+  background-image: url("https://images.pexels.com/photos/894695/pexels-photo-894695.jpeg");
+}
+.imageContainer {
+  position: relative;
+  display: inline-block;
+}
+.imageContainer::before{
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 211.5%;
+  height: 100%;
+  background-color: rgba(33, 20, 1, 60%); /* Change the color and opacity as needed */
+}
+.imageContainer img {
+  display: block;
+  width: 211.5%;
+  height: 600px;
+}
+.coffeeButton{
+  background-color: #E6CCA9;
+  font-family: Alata;
+  font-size: 25px;
+  color:black;
+  width: 50%;
+  height: 30px;
+  padding: 10px;
+  padding-bottom: 20px;
+  text-align: center;
+}
+
+.overlayText {
+  position: absolute;
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-90%, -75%); 
+  color: #fff; 
+  padding: 10px 20px; 
+  font-size: 75px; 
+  text-align: center;
+  font-family: Lusitana;
+}
