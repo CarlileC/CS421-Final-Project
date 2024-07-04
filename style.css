@@ -3,12 +3,16 @@ ul li{
     list-style-type: none;
   }
 
-h2{
+h3,h2{
   font-family: Lusitana;
+}
+a{
+  text-decoration: none;
+  color: black;
 }
 .navigation{
   display: inline-block;
-  padding: 10px;;
+  padding: 10px;
 }
 .logo{
   text-align: left;
@@ -90,4 +94,27 @@ h2{
 .popularCoffee img{
   width: 100%;
   height: 300px;
+}
+
+.coffeeContainer{
+  text-align: center;
+  border: 1px solid lightgray;
+}
+
+.coffeeElement{
+  display: inline-block;
+  padding-right: 10px;
+  padding-left: 10px;
+  padding-top: 10px;
+  margin-right: 125px;
+  margin-left: 125px;
+  border: 1px solid lightgray;
+  font-family: Alata;
+  }
+.coffeeElement img{
+  width: 100%;
+  height: 300px;
+}
+.description{
+  font-style: italic;
 }
