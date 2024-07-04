@@ -3,25 +3,31 @@ ul li{
     list-style-type: none;
   }
 
+
 h3,h2{
   font-family: Lusitana;
 }
+body {
+  margin: 0;
+  padding: 0;
+  }
 a{
   text-decoration: none;
   color: black;
 }
 .navigation{
   display: inline-block;
-  padding: 10px;
+  padding-left: 80px;
 }
 .logo{
   text-align: left;
+  padding-left: 60px;
   padding-right: 250px;
   font-family: IM Fell DW Pica SC;
   font-size: 28px;
 }
 .cart{
-  padding-left: 800px;
+  padding-left: 500px;
 }
 .headerText{
   padding-right: 68px;
@@ -32,6 +38,7 @@ a{
 }
 .header{
   background-color: #E6CCA9;
+  height: 80px;
 }
 
 .imageContainer {
@@ -100,7 +107,11 @@ a{
   text-align: center;
   border: 1px solid lightgray;
 }
-
+.coffeeContainer h2{
+  text-align: left;
+  font-size: 36px;
+  padding-left: 300px;
+}
 .coffeeElement{
   display: inline-block;
   padding-right: 10px;
@@ -117,4 +128,24 @@ a{
 }
 .description{
   font-style: italic;
+}
+
+.coffeeImageContainer {
+  position: relative;
+  display: inline-block;
+}
+.coffeeImageContainer::before{
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 253.7%;
+  height: 100%;
+  background-color: rgba(33, 20, 1, 60%); /* Change the color and opacity as needed */
+}
+.coffeeImageContainer img {
+  display: block;
+  width: 253.7%;
+  height: 500px;
 }
