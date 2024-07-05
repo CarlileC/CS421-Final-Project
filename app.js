@@ -1,5 +1,4 @@
 function greeter(name) {
-    console.log("Welcome, " + name + ", to the coffee shop!");
+    var greetingMessage = "Welcome to the coffee shop " + name;
+    document.getElementById("greeting").innerHTML = greetingMessage;
 }
-
-greeter("Christopher")
