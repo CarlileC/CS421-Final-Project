@@ -4,29 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css?family=IM Fell DW Pica SC" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css?family=Alata" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css?family=Lusitana" rel="stylesheet">
   <title>Book and a Brew</title>
 </head>
 
 <body>
-  <div class="header">
-    <div class="navigation">
-      <h3 class="logo">BOOK AND A BREW</h3>
-    </div>
-    <div class="navigation">
-      <ul>
-        <li><a href="HomePage.html" class="headerText">Home</a></li>
-        <li><a href="CoffeeList.html" class="active headerText">Coffee</a></li>
-        <li><a class="headerText">About Us</a></li>
-      </ul>
-    </div>
-    <div class="navigation">
-      <a href="cart.html"><p class="cart">Cart</p> </a>
-    </div>
-  </div>
+  {% extends "base.html" %}
+  {% block content %}
   <div class="coffeeImageContainer">
     <img src="https://images.pexels.com/photos/894695/pexels-photo-894695.jpeg" alt="image">
     <div class="overlayText">Our Coffee
@@ -37,19 +20,19 @@
       <div class="coffeeContainer">
         <h2>Book Themed</h2>
         <div class="coffeeElement">
-        <a href="SecondBreakfast.html"><img src="https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg">
+        <a href="{{url_for('SecondBreakfast')}}"><img src="https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg">
           <p>Second Breakfast</p>
           <p class="description">add flavor notes here</p>
           </a>
         </div>
         <div class="coffeeElement">
-          <a href="TheRoastOfLeaves.html"><img src="https://m.media-amazon.com/images/I/51QoJuZLrlL._AC_UF1000,1000_QL80_.jpg">
+          <a href="{{url_for('TheRoastOfLeaves')}}"><img src="https://m.media-amazon.com/images/I/51QoJuZLrlL._AC_UF1000,1000_QL80_.jpg">
           <p>The Roast of Leaves</p>
           <p class="description">add flavor notes here</p>
         </a>
         </div>
         <div class="coffeeElement">
-          <a href="AtTheCupsOfMadness.html"><img src="https://m.media-amazon.com/images/I/71aD7mGX+2L._AC_UF1000,1000_QL80_.jpg">
+          <a href="{{url_for('AtTheCupsOfMadness')}}"><img src="https://m.media-amazon.com/images/I/71aD7mGX+2L._AC_UF1000,1000_QL80_.jpg">
           <p>At The Cups of Madness</p>
           <p class="description">add flavor notes here</p>
         </a>
@@ -73,6 +56,7 @@
         </div>
       </div>
     </div>
+    {% endblock %}
 </body>
 
 </html>

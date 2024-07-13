@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Book and a Brew</title>
+</head>
+
+<body>
+  {% extends "base.html" %}
+  {% block content %}
+  <h2 class="title">{{coffeeName}}</h2>
+  <div class="coffeePage">
+    <div class="coffeePicture">
+      {{coffeeImage}}
+    </div>
+    <div class="coffeeText">
+      <p> {{coffeeDescription}}<br></p>
+
+
+          <!-- Form to add items into the cart -->
+          <form>
+          <select name="optionSelect" id="optionSelect">
+            {{coffeeDropdown}}
+          </select>
+          <button type="button" class="addToCart">Add to Cart</button>
+        </form>
+
+
+    </div>
+  </div>
+  {% endblock %}
+</body>
+</html>
