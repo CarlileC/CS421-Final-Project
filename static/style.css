@@ -190,3 +190,16 @@ padding-left: 135px;
 text-align: center;
 font-family: Lusitana;
 }
+
+.requirements{
+  padding-left: 750px;
+}
+
+.error{
+  padding-left: 750px;
+  color: red;
+}
+
+.container{
+  padding-left: 400px;
+}
