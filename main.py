@@ -3,7 +3,7 @@ from flask import Flask, render_template, request
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-
+from coffeeInfo import descriptionChoice
 
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -30,6 +30,14 @@ class User(db.Model):
         
     def __repr__(self):
         return f"ID: {self.id} Name: {self.firstName} {self.lastName} Email: {self.email} Password: {self.password}"
+    
+# class Coffee(db.Model):
+#     _tablename__="Coffee"
+    
+#     id = db.Column(db.Integer, primary_key = True)
+#     coffeeName = db.Column(db.Text)
+#     favCount = db.Column(db.Integer)
+    
 db.create_all()
 #END SECTION
 
@@ -88,7 +96,7 @@ def thankyou():
             db.session.commit()
             return render_template('thankyou.html', message=Markup(f"<h3>Account successfully created! Thank you {firstName} {lastName}</h3>"))
         except IntegrityError:
-                return render_template('signup.html', errorMessage=Markup("<h3>Email already in database</h3>"))
+            return render_template('signup.html', errorMessage=Markup("<h3>Email already in database</h3>"))
         
     else:
         message += "</ul>"
@@ -114,56 +122,27 @@ def secretpage():
 def CoffeeList():
     return render_template('CoffeeList.html')
 
-'''
-All of these functions render CoffeePage.html, but dynamically change them based on the button pressed.
-coffeeImage is the link to the picture used on the web page.
-coffeeDropdown is for the dropdown menu, it lists 3 options. Just the coffee, just the book, then a combo of the book and the coffee
-coffeeDescription is for a quick description of the coffee and how it relates to the book, as well as a quick description of the book.
-'''
+
+#I hate the function I made to clean this up. Is there a better way?
+
 @app.route('/SecondBreakfast')
 def SecondBreakfast():
-    coffeeImage = Markup("<img src='https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg'>") 
-    coffeeDropdown = Markup("<option value='Second Breakfast'>Second Breakfast</option> \
-                            <option value='Lord of the Rings'>Lord of the Rings</option> \
-                            <option value='Second Breakfast + Lord of the Rings'>Second Breakfast + Lord of the Rings</option>")
-    coffeeDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse non volutpat nunc. Sed vitae diam quis sapien venenatis consequat vitae a est.  \
-        Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Morbi leo enim, tristique eu erat non, ullamcorper rutrum felis. \
-         Suspendisse quis laoreet libero. Maecenas dolor dolor, convallis ac mi et, vulputate fermentum erat. Sed leo tortor, dictum ut accumsan sed, mattis in dui. \
-         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse ullamcorper dui quis lacinia sodales. \
-          Integer a leo sed lorem facilisis pharetra sit amet id risus. Morbi metus eros, feugiat sit amet massa et, elementum rutrum libero. \
-          Suspendisse id leo nec metus egestas sodales vitae vitae felis. Vivamus accumsan vulputate luctus. Praesent ut finibus lectus. \
-          Donec vitae mauris at diam maximus sollicitudin."
-    return render_template('CoffeePage.html', coffeeName="Second Breakfast", coffeeImage=coffeeImage, coffeeDescription=coffeeDescription, coffeeDropdown=coffeeDropdown)
+    infoList = descriptionChoice("Second Breakfast") #located in coffeeInfo.py
+
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
+
 
 @app.route('/TheRoastOfLeaves')
 def TheRoastOfLeaves():
-    coffeeImage = Markup("<img src='https://m.media-amazon.com/images/I/51QoJuZLrlL._AC_UF1000,1000_QL80_.jpg'>")
-    coffeeDropdown = Markup("<option value='The Roast of Leaves'>The Roast of Leaves</option> \
-                            <option value='The House of Leaves'>The House of Leaves</option> \
-                            <option value='The Roast of Leaves + The House of Leaves'>The Roast of Leaves + The House of Leaves</option>")
-    coffeeDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse non volutpat nunc. Sed vitae diam quis sapien venenatis consequat vitae a est.  \
-        Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Morbi leo enim, tristique eu erat non, ullamcorper rutrum felis. \
-         Suspendisse quis laoreet libero. Maecenas dolor dolor, convallis ac mi et, vulputate fermentum erat. Sed leo tortor, dictum ut accumsan sed, mattis in dui. \
-         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse ullamcorper dui quis lacinia sodales. \
-          Integer a leo sed lorem facilisis pharetra sit amet id risus. Morbi metus eros, feugiat sit amet massa et, elementum rutrum libero. \
-          Suspendisse id leo nec metus egestas sodales vitae vitae felis. Vivamus accumsan vulputate luctus. Praesent ut finibus lectus. \
-          Donec vitae mauris at diam maximus sollicitudin."
-    return render_template('CoffeePage.html', coffeeName="The Roast of Leaves", coffeeImage=coffeeImage, coffeeDescription=coffeeDescription, coffeeDropdown=coffeeDropdown)
+    infoList = descriptionChoice("The Roast of Leaves")
+
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
 
 @app.route('/AtTheCupsOfMadness')
 def AtTheCupsOfMadness():
-    coffeeImage = Markup("<img src='https://m.media-amazon.com/images/I/71aD7mGX+2L._AC_UF1000,1000_QL80_.jpg'>")
-    coffeeDropdown = Markup("<option value='At the Cups of Madness'>At the Cups of Madness</option> \
-                            <option value='At the House of Madness'>At the House of Madness</option> \
-                            <option value='At the Cups of Madness + At the House of Madness'>At the Cups of Madness + At the House of Madness</option>")
-    coffeeDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse non volutpat nunc. Sed vitae diam quis sapien venenatis consequat vitae a est.  \
-        Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Morbi leo enim, tristique eu erat non, ullamcorper rutrum felis. \
-         Suspendisse quis laoreet libero. Maecenas dolor dolor, convallis ac mi et, vulputate fermentum erat. Sed leo tortor, dictum ut accumsan sed, mattis in dui. \
-         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse ullamcorper dui quis lacinia sodales. \
-          Integer a leo sed lorem facilisis pharetra sit amet id risus. Morbi metus eros, feugiat sit amet massa et, elementum rutrum libero. \
-          Suspendisse id leo nec metus egestas sodales vitae vitae felis. Vivamus accumsan vulputate luctus. Praesent ut finibus lectus. \
-          Donec vitae mauris at diam maximus sollicitudin."
-    return render_template('CoffeePage.html', coffeeName="At The Cups of Madness", coffeeImage=coffeeImage, coffeeDescription=coffeeDescription, coffeeDropdown=coffeeDropdown)
+    infoList = descriptionChoice("At the Cups of Maddness")
+
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
     
 if __name__ == "__main__":
     app.run(debug=True)
