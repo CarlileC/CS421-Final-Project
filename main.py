@@ -4,7 +4,7 @@ from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from coffeeInfo import descriptionChoice
-
+from utilities import passwordCheck
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'data.sqlite')
@@ -56,52 +56,27 @@ def signup():
 def signin():
     return render_template('signin.html')
 
-#THIS SECTION ALSO NEEDS TO BE CLEANED UP PASSWORD CHECK SHOULD BE MOVED INTO A SEPERATE FUNCTION THAT RETURNS ALL THE RENDER TEMPLATES
-#IDEALLY THIS FUNCTION SHOULD BE NO MORE THAN 5-10 LINES
+#Still a little messy
 @app.route('/thankyou', methods=['GET', 'POST'])
 def thankyou():
-    firstName = request.args.get('firstName')
-    lastName = request.args.get('lastName')
-    email = request.args.get('email')
-    password = request.args.get('password')
-    confirmPassword = request.args.get('confirmPassword')
+    firstName:str = request.args.get('firstName')
+    lastName:str = request.args.get('lastName')
+    email:str = request.args.get('email')
+    password:str = request.args.get('password')
+    confirmPassword:str = request.args.get('confirmPassword')
     
-    if password != confirmPassword:
-        return render_template('signup.html', errorMessage=Markup("<p>Passwords did not match!</p>"))
+    passwordInfo:list = passwordCheck(password, confirmPassword) #located in utilities, checks if password meets requirements
     
-    upper = False
-    lower = False
-    number = password[-1].isdigit()
-    length = len(password) >= 8
-    for i in password:
-        if i.isupper() == True:
-            upper = True
-        elif i.islower() == True:
-            lower = True
-    message = "<p>Oh no! Looks like you had issues with your password! <br><br> Here are the requirements you failed:<p> <ul>"
-    if(not upper):
-        message += "<li>You did not use an upper case letter</li>"
-    if(not lower):
-        message += "<li>You did not use a lower case letter</li>"
-    if(not number):
-        message += "<li>You did not use a number at the end</li>"
-    if(not length):
-        message += "<li>Your password is less than 8 characters"
-    
-    if(upper and lower and number and length):
-        message = "<p>Your Password passed the 3 requirements</p>"
-        newUser:User = User(firstName, lastName, password, email)
+    if passwordInfo[0]: #password met requirements!
         try:
+            newUser:User = User(firstName, lastName, password, email)
             db.session.add(newUser)
             db.session.commit()
             return render_template('thankyou.html', message=Markup(f"<h3>Account successfully created! Thank you {firstName} {lastName}</h3>"))
         except IntegrityError:
-            return render_template('signup.html', errorMessage=Markup("<h3>Email already in database</h3>"))
-        
-    else:
-        message += "</ul>"
-        returnMessage = Markup(message)
-        return render_template('signup.html', errorMessage=returnMessage)
+            return render_template('signup.html', errorMessage=Markup("<h3 class='errorMessage'>Email already in database</h3>"))
+    else: #password failed, error message located in second element of list.
+        return render_template('signup.html', errorMessage=passwordInfo[1])
 
 #This should be fine? Still a little messy
 @app.route('/secretpage', methods=['GET', 'POST'])

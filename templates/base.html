@@ -23,14 +23,14 @@
           <h3 class="logo">BOOK AND A BREW</h3>
         </div>
         <div class="navigation">
-          <ul>
-            <li><a href="{{url_for('index')}}" class="headerText">Home</a></li>
-            <li><a href="{{url_for('CoffeeList')}}" class="headerText">Coffee</a></li>
-            <li><a class="headerText">About Us</a></li>
+          <nav>
+            <a href="{{url_for('index')}}" class="headerText">Home</a>
+            <a href="{{url_for('CoffeeList')}}" class="headerText">Coffee</a>
+            <a class="headerText">About Us</a>
             <!-- The Pages of these two links are ugly, need clean up -->
-            <li><a href="{{url_for('signup')}}">Sign Up</a></li>
-            <li><a href="{{url_for('signin')}}">Sign In</a></li>
-          </ul>
+            <a href="{{url_for('signup')}}">Sign Up</a>
+            <a href="{{url_for('signin')}}">Sign In</a>
+          </nav>
         </div>
         <div class="navigation">
           <a href="cart.html"><p class="cart">Cart</p> </a>
