@@ -1,19 +1,24 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from coffeeInfo import descriptionChoice
 from utilities import passwordCheck
+from flask_login import LoginManager, UserMixin, login_user, logout_user
+
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'data.sqlite')
 app.config['SQL_TRAC_MODIFICATIONS'] = False
-
+app.config["SECRET_KEY"] = "TEMP KEY"
 db = SQLAlchemy(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
 #THIS NEXT SECTION IS JUST TAKEN FROM LAB07, IT NEEDS TO BE CLEANED UP AND MOVED INTO A DIFFERENT FILE IDEALLY
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__="Users"
     
     id = db.Column(db.Integer, primary_key = True)
@@ -38,59 +43,67 @@ class User(db.Model):
 #     coffeeName = db.Column(db.Text)
 #     favCount = db.Column(db.Integer)
     
-db.create_all()
 #END SECTION
+
+@login_manager.user_loader
+def get_user(user_id):
+    return User.query.get(user_id)
 
 #Renders the home page
 @app.route('/')
 def index():
     return render_template('index.html')
 
-#Sign Up button routing
-@app.route('/signup')
-def signup():
-    return render_template('signup.html')
 
-#Sign In button routing
-@app.route('/signin')
+#Sign In
+@app.route('/signin', methods=['GET', 'POST'])
 def signin():
-    return render_template('signin.html')
+    if request.method == "POST": #User submits the form
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = db.session.query(User).filter(User.email==email, User.password==password).first() #queries the database, looking if there is a combination in the database
+        if user is not None: #Is there a user? If so log them in
+            login_user(user)
+            return redirect(url_for('secretpage'))
+        else: #No? Let them try again and give them an error
+            return render_template('signin.html', errorMessage=Markup("<h2>Incorrect username or password"))
+
+    return render_template('signin.html') #User clicks on the nav bar link
 
 #Still a little messy
-@app.route('/thankyou', methods=['GET', 'POST'])
-def thankyou():
-    firstName:str = request.args.get('firstName')
-    lastName:str = request.args.get('lastName')
-    email:str = request.args.get('email')
-    password:str = request.args.get('password')
-    confirmPassword:str = request.args.get('confirmPassword')
-    
-    passwordInfo:list = passwordCheck(password, confirmPassword) #located in utilities, checks if password meets requirements
-    
-    if passwordInfo[0]: #password met requirements!
-        try:
-            newUser:User = User(firstName, lastName, password, email)
-            db.session.add(newUser)
-            db.session.commit()
-            return render_template('thankyou.html', message=Markup(f"<h3>Account successfully created! Thank you {firstName} {lastName}</h3>"))
-        except IntegrityError:
-            return render_template('signup.html', errorMessage=Markup("<h3 class='errorMessage'>Email already in database</h3>"))
-    else: #password failed, error message located in second element of list.
-        return render_template('signup.html', errorMessage=passwordInfo[1])
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == "POST": #User submits the form
+        firstName:str = request.form.get('firstName')
+        lastName:str = request.form.get('lastName')
+        email:str = request.form.get('email')
+        password:str = request.form.get('password')
+        confirmPassword:str = request.form.get('confirmPassword')
+        
+        passwordInfo:list = passwordCheck(password, confirmPassword) #located in utilities, checks if password meets requirements
+        
+        if passwordInfo[0]: #password met requirements!
+            try:
+                newUser:User = User(firstName, lastName, password, email)
+                db.session.add(newUser)
+                db.session.commit()
+                return redirect(url_for('signin', errorMessage="Thank you, please sign in")) #redirects them to the sign in page, letting them know it worked
+            except IntegrityError:
+                return render_template('signup.html', errorMessage=Markup("<h3 class='errorMessage'>Email already in database</h3>")) #email in database, try again
+        else: #password failed, error message located in second element of list.
+            return render_template('signup.html', errorMessage=passwordInfo[1])
+        
+    return render_template("signup.html") #User clicks on the nav bar link
 
-#This should be fine? Still a little messy
+#A fun reference, should be removed later
 @app.route('/secretpage', methods=['GET', 'POST'])
 def secretpage():
-    email = request.args.get('email')
-    password = request.args.get('password')
-    success = db.session.query(User).filter(User.email==email, User.password==password).first() is not None
-    if success:
-        return render_template('secretpage.html', message=Markup(f"<h1>You have successfully logged in</h1>"))
-    else:
-        return render_template('signin.html', errorMessage=Markup("<h2>Incorrect username or password"))
+        return render_template('secretpage.html', message=Markup(f"<h1>My name is Chris Houlihan. <br> This is my top secret page. <br> Keep it between us, OK?</h1>"))
 
-#END SECTION
-
+@app.route("/signout")
+def signout():
+    logout_user()
+    return redirect(url_for("index"))
 
 #Renders the coffee list
 @app.route('/CoffeeList')
@@ -99,10 +112,10 @@ def CoffeeList():
 
 
 #I hate the function I made to clean this up. Is there a better way?
-
+#descriptionChoice located in coffeeInfo.py
 @app.route('/SecondBreakfast')
 def SecondBreakfast():
-    infoList = descriptionChoice("Second Breakfast") #located in coffeeInfo.py
+    infoList = descriptionChoice("Second Breakfast")
 
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
 

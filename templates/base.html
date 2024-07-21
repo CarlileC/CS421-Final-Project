@@ -26,10 +26,13 @@
           <nav>
             <a href="{{url_for('index')}}" class="headerText">Home</a>
             <a href="{{url_for('CoffeeList')}}" class="headerText">Coffee</a>
-            <a class="headerText">About Us</a>
+            {% if current_user.is_authenticated %}
+            <a href="{{url_for('signout')}}" class="headerText">Sign Out</a>
             <!-- The Pages of these two links are ugly, need clean up -->
-            <a href="{{url_for('signup')}}">Sign Up</a>
-            <a href="{{url_for('signin')}}">Sign In</a>
+            {% else %}
+            <a href="{{url_for('signup')}}" class="headerText">Sign Up</a>
+            <a href="{{url_for('signin')}}" class="headerText">Sign In</a>
+            {% endif %}
           </nav>
         </div>
         <div class="navigation">
