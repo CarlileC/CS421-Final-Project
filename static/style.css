@@ -1,6 +1,6 @@
 nav{
-  display: inline;
-  list-style-type: none;
+display: inline;
+list-style-type: none;
 }
 
 
@@ -197,20 +197,20 @@ font-family: Lusitana;
 }
 
 .requirements{
-  padding-left: 750px;
+padding-left: 750px;
 }
 
 .error{
-  padding-left: 750px;
-  color: red;
+padding-left: 750px;
+color: red;
 }
 
 .container{
-  padding-left: 400px;
+padding-left: 400px;
 }
 
 .errorMessage{
-  color: red
+color: red
 }
 
 .cartAttributes{
@@ -234,5 +234,10 @@ border-collapse: collapse; /* Ensure no space between table cells */
 }
 
 .yourCart{
-  padding: 0 100px;
+padding: 0 100px;
+}
+
+.cartItemMedia img {
+width: 100px;
+height: auto;
 }
