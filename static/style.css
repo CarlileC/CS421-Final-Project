@@ -7,10 +7,12 @@ nav{
 h3,h2{
 font-family: Lusitana;
 }
+
 body {
 margin: 0;
 padding: 0;
 }
+
 a{
 text-decoration: none;
 color: black;
@@ -19,6 +21,7 @@ color: black;
 .navigation{
 display: inline-block;
 padding-left: 80px;
+
 }
 .logo{
 text-align: left;
@@ -27,9 +30,7 @@ padding-right: 250px;
 font-family: IM Fell DW Pica SC;
 font-size: 28px;
 }
-.cart{
-padding-left: 500px;
-}
+
 .headerText{
 padding-right: 68px;
 text-align: right;
@@ -186,6 +187,10 @@ font-family: Alata;
 padding-left: 135px;
 }
 
+.cart {
+text-align: center;
+}
+
 .cartTitle{
 text-align: center;
 font-family: Lusitana;
@@ -206,4 +211,28 @@ font-family: Lusitana;
 
 .errorMessage{
   color: red
+}
+
+.cartAttributes{
+text-align: center;
+font-family: Lusitana;
+}
+
+.columnHeader{
+padding: 20px 200px;
+}
+
+.table th, .table td{
+padding: 10px 20px;
+text-align: center;
+}
+
+.table{
+width: 100%; /* Ensure table takes full width of container */
+border-collapse: collapse; /* Ensure no space between table cells */
+
+}
+
+.yourCart{
+  padding: 0 100px;
 }

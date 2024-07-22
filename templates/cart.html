@@ -12,22 +12,42 @@
 </head>
 
 <body>
-  <div class="header">
-    <div class="navigation">
-      <h3 class="logo">BOOK AND A BREW</h3>
+  {% extends "base.html" %}
+  {% block content%}
+  <cart-items class="cart">
+    <div class="yourCart">
+      <h2 class="cartTitle">Your Cart</h2>
+      <a href="{{url_for('CoffeeList')}}">Continue Shopping</a>
     </div>
-    <div class="navigation">
-      <ul>
-        <li><a href="HomePage.html" class="headerText">Home</a></li>
-        <li><a href="CoffeeList.html" class="active headerText">Coffee</a></li>
-        <li><a class="headerText">About Us</a></li>
-      </ul>
-    </div>
-    <div class="navigation">
-        <a href="cart.html"><p class="cart">Cart</p> </a>
+    <div class="cartAttributes">
+      <table>
+        <thead>
+          <tr>
+            <th class="columnHeader">Product</th>
+            <th class="columnHeader">Quantity</th>
+            <th class="columnHeader">Price</th>
+            <th class="columnHeader">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th class="cartItemMedia">{{coffeeImage}}</th>
+            <th class="price"></th>
+            <th class="quantity"></th>
+            <th class="total"></th>
+          </tr>
+        </tbody>
+      </table>
+      <form>
+        <select name="optionSelect" id="optionSelect">
+          {{coffeeDropdown}}
+        </select>
+        <button type="button" class="addToCart">Add to Cart</button>
+      </form>
     </div>
   </div>
-  <h2 class="cartTitle">Cart</h2>
+  </cart-items>
   <!-- Add a cart list and a checkout button here-->
+  {% endblock %}
 </body>
 </html>

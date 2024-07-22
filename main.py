@@ -106,6 +106,11 @@ def signout():
     return redirect(url_for("index"))
 
 #Renders the coffee list
+@app.route('/cart')
+def cart():
+    coffeeImage = Markup("<img src='https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg'>")
+    return render_template('cart.html', coffeeImage=coffeeImage)
+
 @app.route('/CoffeeList')
 def CoffeeList():
     return render_template('CoffeeList.html')
