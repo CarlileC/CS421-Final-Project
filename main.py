@@ -89,6 +89,14 @@ class Cart(db.Model):
     line 84 creates the link between the user and the cart just like in the 'product' models
     lines 85-87 create the cart attributes for each 
     """
+    
+class Favorite(db.Model):
+    __tablename__="Favorite"
+    
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False) 
+    coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'), nullable=False)
+    #many to many relationship between user and coffee
 
 with app.app_context():
     db.create_all()
