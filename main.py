@@ -1,14 +1,14 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, redirect, session, url_for
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from coffeeInfo import descriptionChoice
 from utilities import passwordCheck
-from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, SelectField
 from wtforms.validators import InputRequired, EqualTo
 
 app = Flask(__name__)
@@ -59,6 +59,7 @@ class Coffee(db.Model):
     favCount = db.Column(db.Integer)
     price = db.Column(db.Float, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
+    cart = db.relationship('Cart', back_populates='coffeeItems')
 
 class Book(db.Model):
     __tablename__="Book"
@@ -67,6 +68,7 @@ class Book(db.Model):
     bookName = db.Column(db.Text, nullable = False)
     price = db.Column(db.Float, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
+    cart = db.relationship('Cart', back_populates='bookItems')
 
 class VideoGame(db.Model):
     __tablename__="Videogame"
@@ -75,16 +77,17 @@ class VideoGame(db.Model):
     gameName = db.Column(db.Text, nullable = False)
     price = db.Column(db.Float, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
-    
+    cart = db.relationship('Cart', back_populates='gameItems')
 
 class Cart(db.Model):
     __tablename__="Cart"
 
+    
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
-    coffeeItems = db.relationship('Coffee', backref="cart", lazy=True)
-    bookItems = db.relationship('Book', backref='cart', lazy=True)
-    gameItems = db.relationship('VideoGame', backref='cart', lazy=True)
+    coffeeItems = db.relationship('Coffee', back_populates="cart", lazy=True)
+    bookItems = db.relationship('Book', back_populates='cart', lazy=True)
+    gameItems = db.relationship('VideoGame', back_populates='cart', lazy=True)
     """
     line 84 creates the link between the user and the cart just like in the 'product' models
     lines 85-87 create the cart attributes for each 
@@ -98,16 +101,31 @@ with app.app_context():
 The forms for the signin and signup methods
 """
 class SignInForm(FlaskForm):
-    email = StringField('Enter Your Email', validators = [InputRequired()])
-    password = PasswordField('Enter Your Password', validators = [InputRequired()])
+    email = StringField('Email:', validators = [InputRequired()])
+    password = PasswordField('Password:', validators = [InputRequired()])
     submit = SubmitField('Sign In')
 
 class SignUpForm(FlaskForm):
-    email = StringField('Email', validators = [InputRequired()])
-    password = PasswordField('Password', validators = [InputRequired()])
-    confirmPassword = PasswordField('Confirm Password', validators=[InputRequired(), EqualTo('password', message='Passwords must be the same')])
-    firstName = StringField('First Name', validators = [InputRequired()])
-    lastName = StringField('Last Name', validators = [InputRequired()])
+    email = StringField('Email:', validators = [InputRequired()])
+    password = PasswordField('Password:', validators = [InputRequired()])
+    confirmPassword = PasswordField('Confirm Password:', validators=[InputRequired(), EqualTo('password', message='Passwords must be the same')])
+    firstName = StringField('First Name:', validators = [InputRequired()])
+    lastName = StringField('Last Name:', validators = [InputRequired()])
+
+"""Lord of the Rings"""
+class SelectLotrItemsForm(FlaskForm):
+    product_choice = SelectField(choices=['Second Breakfast', 'The Lord of the Rings'])
+    submit = SubmitField('Add to Cart')
+
+"""House of Leaves"""
+class SelectHoLItemsForm(FlaskForm):
+    product_choice = SelectField(choices=['Roast of Leaves', 'House of Leaves'])
+    submit = SubmitField('Add to Cart')
+
+"""At the House of Madness"""
+class SelectAtHoMItemsForm(FlaskForm):
+    product_choice = SelectField(choices=['At the Cups of Madness', 'At the Mountains of Madness'])
+    submit = SubmitField('Add to Cart')
 
 @login_manager.user_loader
 def get_user(user_id):
@@ -179,9 +197,14 @@ def signout():
     return redirect(url_for("index"))
 
 @app.route('/cart')
+@login_required
 def cart():
     if current_user:
-        return render_template('cart.html')
+        user_cart = current_user.cart
+        user_coffee_items = user_cart.coffeeItems
+        user_book_items = user_cart.bookItems
+        user_game_items = user_cart.gameItems
+        return render_template('cart.html', current_user=current_user, user_coffee_items=user_coffee_items, user_book_items=user_book_items, user_game_items=user_game_items)
     else:
         return render_template('SecretPage.html')
 
@@ -191,29 +214,64 @@ def cart():
 def CoffeeList():
     return render_template('CoffeeList.html')
 
-
 #Renders the coffee list
-
 
 #I hate the function I made to clean this up. Is there a better way?
 #descriptionChoice located in coffeeInfo.py
-@app.route('/SecondBreakfast')
+@app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
+    coffeeDropDown = SelectLotrItemsForm()
     infoList = descriptionChoice("Second Breakfast")
+    print(current_user.cart)
+    if coffeeDropDown.validate_on_submit():
+        print('form validated')
+        product = coffeeDropDown.product_choice.data
+        if product == 'Second Breakfast':
+            new_coffee = Coffee(coffeeName='Second Breakfast', favCount=0, price=19.99, cart=current_user.cart)
+            db.session.add(new_coffee)
+            db.session.commit()
+        if product == 'The Lord of the Rings':
+            print(product + ' selected.')
+            new_book = Book(bookName='Lord of the Rings', price=89.99, cart=current_user.cart)
+            db.session.add(new_book)
+            db.session.commit()
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
 
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
 
-
-@app.route('/TheRoastOfLeaves')
+@app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
+    coffeeDropDown = SelectHoLItemsForm()
     infoList = descriptionChoice("The Roast of Leaves")
+    print(current_user.cart)
+    if coffeeDropDown.validate_on_submit():
+        print('form validated')
+        product = coffeeDropDown.product_choice.data
+        if product == 'Roast of Leaves':
+            new_coffee = Coffee(coffeeName='The Roast of Leaves', favCount=0, price=19.99, cart=current_user.cart)
+            db.session.add(new_coffee)
+            db.session.commit()
+        if product == 'House of Leaves':
+            new_book = Book(bookName='House of Leaves', price=29.99, cart=current_user.cart)
+            db.session.add(new_book)
+            db.session.commit()
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
 
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
-
-@app.route('/AtTheCupsOfMadness')
+@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
+    coffeeDropDown = SelectAtHoMItemsForm()
     infoList = descriptionChoice("At the Cups of Maddness")
-
+    print(current_user.cart)
+    if coffeeDropDown.validate_on_submit():
+        print('form validated')
+        product = coffeeDropDown.product_choice.data
+        if product == 'At the Cups of Madness':
+            new_coffee = Coffee(coffeeName='At the Cups of Madness', favCount=0, price=19.99, cart=current_user.cart)
+            db.session.add(new_coffee)
+            db.session.commit()
+        if product == 'At the House of Madness':
+            new_book = Book(bookName='At the Mountains of Madness', price=25.99, cart=current_user.cart)
+            db.session.add(new_book)
+            db.session.commit()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
     
 if __name__ == "__main__":

@@ -35,9 +35,11 @@
             {% endif %}
           </nav>
         </div>
+        {% if current_user.is_authenticated %}
         <div class="navigation">
           <a href="{{url_for('cart')}}"><p class="headerText">Cart</p></a>
         </div>
+        {% endif %}
       </div>
       {% block content %}
       {% endblock %}

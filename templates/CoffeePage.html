@@ -19,15 +19,12 @@
     <div class="coffeeText">
       <p> {{coffeeDescription}}<br></p>
 
-
           <!-- Form to add items into the cart -->
-          <form>
-          <select name="optionSelect" id="optionSelect">
-            {{coffeeDropdown}}
-          </select>
-          <button type="button" class="addToCart">Add to Cart</button>
-        </form>
-
+          <form action="#" method="POST">
+            {{ coffeeDropDown.hidden_tag() }}
+            {{ coffeeDropDown.product_choice.label }} {{ coffeeDropDown.product_choice }}
+            {{ coffeeDropDown.submit }}
+          </form>
 
     </div>
   </div>

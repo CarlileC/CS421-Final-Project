@@ -20,34 +20,31 @@
       <a href="{{url_for('CoffeeList')}}">Continue Shopping</a>
     </div>
     <div class="cartAttributes">
+      <form action="#" method="POST">
       <table>
         <thead>
           <tr>
             <th class="columnHeader">Product</th>
-            <th class="columnHeader">Quantity</th>
             <th class="columnHeader">Price</th>
+            <th class="columnHeader">Quantity</th>
             <th class="columnHeader">Total</th>
           </tr>
         </thead>
         <tbody>
+          {% for coffee in user_coffee_items %}
           <tr>
-            <th class="cartItemMedia"style="width: 100px; height: auto;">{{coffeeImage}}</th>
-            <th class="price"></th>
-            <th class="quantity"></th>
-            <th class="total"></th>
+            {% set total = 0 %}
+            {% set quantity = 0 %}
+            
+            <td class="product">{{coffee.name}}</th>
           </tr>
+          {% endfor %}
         </tbody>
       </table>
-      <form>
-        <select name="optionSelect" id="optionSelect">
-          {{coffeeDropdown}}
-        </select>
-        <button type="button" class="addToCart">Add to Cart</button>
       </form>
     </div>
   </div>
   </cart-items>
-  <!-- Add a cart list and a checkout button here-->
   {% endblock %}
 </body>
 </html>
