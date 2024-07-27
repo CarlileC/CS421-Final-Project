@@ -211,6 +211,7 @@ def signout():
     logout_user()
     return redirect(url_for("index"))
 
+# renders the cart
 @app.route('/cart')
 @login_required
 def cart():
@@ -232,8 +233,40 @@ def cart():
         return render_template('cart.html', current_user=current_user, user_coffee_items=user_coffee_items, user_book_items=user_book_items, user_game_items=user_game_items, items_sub_total=items_sub_total)
     else:
         return render_template('SecretPage.html')
+    
+@app.route("/delete-coffee/<int:coffee_id>", methods=['POST'])
+@login_required
+def delete_coffee(coffee_id):
+    coffee_item = Coffee.query.filter_by(cart_id=current_user.id, id=coffee_id).first_or_404()
+    if coffee_item.quantity > 1:
+        coffee_item.quantity -= 1
+        db.session.commit()
+    elif coffee_item.quantity <= 1:
+        db.session.delete(coffee_item)
+        db.session.commit()
+    return redirect(url_for('cart'))
 
-# renders the cart
+@app.route("/delete-book/<int:book_id>", methods=['POST'])
+def delete_book(book_id):
+    book_item = Book.query.filter_by(cart_id=current_user.id, id=book_id).first_or_404()
+    if book_item.quantity > 1:
+        book_item.quantity -= 1
+        db.session.commit()
+    elif book_item.quantity <= 1:
+        db.session.delete(book_item)
+        db.session.commit()
+    return redirect(url_for('cart'))
+
+@app.route("/delete-game/<int:game_id>", methods=['POST'])
+def delete_game(game_id):
+    game_item = VideoGame.query.filter_by(cart_id=current_user.id, id=game_id).first_or_404()
+    if game_item.quantity > 1:
+        game_item.quantity -= 1
+        db.session.commit()
+    elif game_item.quantity <= 1:
+        db.session.delete(game_item)
+        db.session.commit()
+    return redirect(url_for('cart'))
 
 @app.route('/CoffeeList')
 def CoffeeList():
