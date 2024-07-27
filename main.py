@@ -58,6 +58,7 @@ class Coffee(db.Model):
     coffeeName = db.Column(db.Text, nullable = False)
     favCount = db.Column(db.Integer)
     price = db.Column(db.Float, nullable = False)
+    quantity = db.Column(db.Integer, default = 1)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     cart = db.relationship('Cart', back_populates='coffeeItems')
 
@@ -67,6 +68,7 @@ class Book(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     bookName = db.Column(db.Text, nullable = False)
     price = db.Column(db.Float, nullable = False)
+    quantity = db.Column(db.Integer, default = 1)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     cart = db.relationship('Cart', back_populates='bookItems')
 
@@ -76,6 +78,7 @@ class VideoGame(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     gameName = db.Column(db.Text, nullable = False)
     price = db.Column(db.Float, nullable = False)
+    quantity = db.Column(db.Integer, default = 1)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     cart = db.relationship('Cart', back_populates='gameItems')
 
@@ -119,12 +122,24 @@ class SelectLotrItemsForm(FlaskForm):
 
 """House of Leaves"""
 class SelectHoLItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['Roast of Leaves', 'House of Leaves'])
+    product_choice = SelectField(choices=['The Roast of Leaves', 'The House of Leaves'])
     submit = SubmitField('Add to Cart')
 
 """At the House of Madness"""
 class SelectAtHoMItemsForm(FlaskForm):
     product_choice = SelectField(choices=['At the Cups of Madness', 'At the Mountains of Madness'])
+    submit = SubmitField('Add to Cart')
+
+class SelectCyberPunkItemsForm(FlaskForm):
+    product_choice = SelectField(choices=['The Silverhand Special', 'Cyberpunk 2077'])
+    submit = SubmitField('Add to Cart')
+
+class SelectRDRItemsForm(FlaskForm):
+    product_choice = SelectField(choices=['Western Nostalgia', 'Red Dead Redemption 2'])
+    submit = SubmitField('Add to Cart')
+
+class SelectMCItemsForm(FlaskForm):
+    product_choice = SelectField(choices=['Potion of Energy', 'Minecraft'])
     submit = SubmitField('Add to Cart')
 
 @login_manager.user_loader
@@ -204,7 +219,17 @@ def cart():
         user_coffee_items = user_cart.coffeeItems
         user_book_items = user_cart.bookItems
         user_game_items = user_cart.gameItems
-        return render_template('cart.html', current_user=current_user, user_coffee_items=user_coffee_items, user_book_items=user_book_items, user_game_items=user_game_items)
+        coffee_item_sub_total = 0
+        book_item_sub_total = 0
+        game_item_sub_total = 0
+        for coffee in user_coffee_items:
+            coffee_item_sub_total += coffee.price * coffee.quantity
+        for book in user_book_items:
+            book_item_sub_total += book.price * book.quantity
+        for game in user_game_items:
+            game_item_sub_total += game.price * game.quantity
+        items_sub_total = coffee_item_sub_total + book_item_sub_total + game_item_sub_total     # calculate the sub total for all items
+        return render_template('cart.html', current_user=current_user, user_coffee_items=user_coffee_items, user_book_items=user_book_items, user_game_items=user_game_items, items_sub_total=items_sub_total)
     else:
         return render_template('SecretPage.html')
 
@@ -222,19 +247,27 @@ def CoffeeList():
 def SecondBreakfast():
     coffeeDropDown = SelectLotrItemsForm()
     infoList = descriptionChoice("Second Breakfast")
-    print(current_user.cart)
+    user_cart = current_user.cart
     if coffeeDropDown.validate_on_submit():
-        print('form validated')
         product = coffeeDropDown.product_choice.data
         if product == 'Second Breakfast':
-            new_coffee = Coffee(coffeeName='Second Breakfast', favCount=0, price=19.99, cart=current_user.cart)
-            db.session.add(new_coffee)
-            db.session.commit()
-        if product == 'The Lord of the Rings':
-            print(product + ' selected.')
-            new_book = Book(bookName='Lord of the Rings', price=89.99, cart=current_user.cart)
-            db.session.add(new_book)
-            db.session.commit()
+            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='Second Breakfast').first()
+            if coffee_item: # for quantity, check to see if an item exists already, if it does, increase the quantity
+                coffee_item.quantity += 1
+                db.session.commit()
+            else:       # create a new object
+                new_coffee = Coffee(coffeeName='Second Breakfast', favCount=0, price=19.99, cart=user_cart)
+                db.session.add(new_coffee)
+                db.session.commit()
+        elif product == 'The Lord of the Rings':
+            book_item = Book.query.filter_by(cart_id=current_user.id, bookName='The Lord of the Rings').first()
+            if book_item:
+                book_item.quantity += 1
+                db.session.commit()
+            else:
+                new_book = Book(bookName='The Lord of the Rings', price=89.99, cart=user_cart)
+                db.session.add(new_book)
+                db.session.commit()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
 
 
@@ -242,39 +275,136 @@ def SecondBreakfast():
 def TheRoastOfLeaves():
     coffeeDropDown = SelectHoLItemsForm()
     infoList = descriptionChoice("The Roast of Leaves")
-    print(current_user.cart)
+    user_cart = current_user.cart
     if coffeeDropDown.validate_on_submit():
-        print('form validated')
         product = coffeeDropDown.product_choice.data
-        if product == 'Roast of Leaves':
-            new_coffee = Coffee(coffeeName='The Roast of Leaves', favCount=0, price=19.99, cart=current_user.cart)
-            db.session.add(new_coffee)
-            db.session.commit()
-        if product == 'House of Leaves':
-            new_book = Book(bookName='House of Leaves', price=29.99, cart=current_user.cart)
-            db.session.add(new_book)
-            db.session.commit()
+        if product == 'The Roast of Leaves':
+            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='The Roast of Leaves').first()
+            if coffee_item:
+                coffee_item.quantity += 1
+                db.session.commit()
+            else:
+                new_coffee = Coffee(coffeeName='The Roast of Leaves', favCount=0, price=19.99, cart=user_cart)
+                db.session.add(new_coffee)
+                db.session.commit()
+        elif product == 'The House of Leaves':
+            book_item = Book.query.filter_by(cart_id=current_user.id, bookName='The House of Leaves').first()
+            if book_item:
+                book_item.quantity += 1
+                db.session.commit()
+            else:
+                new_book = Book(bookName='The House of Leaves', price=29.99, cart=user_cart)
+                db.session.add(new_book)
+                db.session.commit()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
 
 @app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
     coffeeDropDown = SelectAtHoMItemsForm()
     infoList = descriptionChoice("At the Cups of Maddness")
-    print(current_user.cart)
+    user_cart = current_user.cart
     if coffeeDropDown.validate_on_submit():
-        print('form validated')
         product = coffeeDropDown.product_choice.data
         if product == 'At the Cups of Madness':
-            new_coffee = Coffee(coffeeName='At the Cups of Madness', favCount=0, price=19.99, cart=current_user.cart)
-            db.session.add(new_coffee)
-            db.session.commit()
-        if product == 'At the House of Madness':
-            new_book = Book(bookName='At the Mountains of Madness', price=25.99, cart=current_user.cart)
-            db.session.add(new_book)
-            db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
-    
+            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='At the Cups of Madness').first()
+            if coffee_item:
+                coffee_item.quantity += 1
+                db.session.commit()
+            else:
+                new_coffee = Coffee(coffeeName='At the Cups of Madness', favCount=0, price=19.99, cart=user_cart)
+                db.session.add(new_coffee)
+                db.session.commit()
+        elif product == 'At the Mountains of Madness':
+            book_item = Book.query.filter_by(cart_id=current_user.id, bookName='At the Mountains of Madness').first()
+            if book_item:
+                book_item.quantity += 1
+                db.session.commit()
+            else:
+                new_book = Book(bookName='At the Mountains of Madness', price=25.99, cart=user_cart)
+                db.session.add(new_book)
+                db.session.commit()
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+
+@app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
+def silver_hand_special():
+    coffeeDropDown = SelectCyberPunkItemsForm()
+    infoList = descriptionChoice('The Silverhand Special')
+    user_cart = current_user.cart
+    if coffeeDropDown.validate_on_submit():
+        product = coffeeDropDown.product_choice.data
+        if product == 'The Silverhand Special':
+            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='The Silverhand Special').first()
+            if coffee_item:
+                coffee_item.quantity += 1
+                db.session.commit()
+            else:
+                new_coffee = Coffee(coffeeName='The Silverhand Special', favCount=0, price=19.99, cart=user_cart)
+                db.session.add(new_coffee)
+                db.session.commit()
+        elif product == 'Cyberpunk 2077':
+            game_item = VideoGame.query.filter_by(cart_id=current_user.id, gameName='Cyberpunk 2077').first()
+            if game_item:
+                game_item.quantity == 1
+                db.session.commit()
+            else:
+                new_game = VideoGame(gameName='Cyberpunk 2077', price=59.99, cart=user_cart)
+                db.session.add(new_game)
+                db.session.commit()
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+
+@app.route('/WesternNostalgia', methods=['GET', 'POST'])
+def western_nostalgia():
+    coffeeDropDown = SelectRDRItemsForm()
+    infoList = descriptionChoice('Western Nostalgia')
+    user_cart = current_user.cart
+    if coffeeDropDown.validate_on_submit():
+        product = coffeeDropDown.product_choice.data
+        if product == 'Western Nostalgia':
+            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='Western Nostalgia').first()
+            if coffee_item:
+                coffee_item.quantity +=1
+                db.session.commit()
+            else:
+                new_coffee = Coffee(coffeeName='Western Nostalgia', favCount=0, price=19.99, cart=user_cart)
+                db.session.add(new_coffee)
+                db.session.commit()
+        elif product == 'Red Dead Redemption 2':
+            game_item = VideoGame.query.filter_by(cart_id=current_user.id, gameName='Red Dead Redemption 2').first()
+            if game_item:
+                game_item.quantity += 1
+                db.session.commit()
+            else:
+                new_game = VideoGame(gameName='Red Dead Redemption 2', price=59.99, cart=user_cart)
+                db.session.add(new_game)
+                db.session.commit()
+    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+
+@app.route('/PotionOfEnergy', methods=['GET', 'POST'])
+def potion_of_energy():
+    coffeeDropDown = SelectMCItemsForm()
+    infoList = descriptionChoice('Potion of Energy')
+    user_cart = current_user.cart
+    if coffeeDropDown.validate_on_submit():
+        product = coffeeDropDown.product_choice.data
+        if product == 'Potion of Energy':
+            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='Potion of Energy').first()
+            if coffee_item:
+                coffee_item.quantity += 1
+                db.session.commit()
+            else:
+                new_coffee = Coffee(coffeeName='Potion of Energy', favCount=0, price=19.99, cart=user_cart)
+                db.session.add(new_coffee)
+                db.session.commit()
+        if product == 'Minecraft':
+            game_item = VideoGame.query.filter_by(cart_id=current_user.id, gameName='Minecraft').first()
+            if game_item:
+                game_item.quantity += 1
+                db.session.commit()
+            else:
+                new_game = VideoGame(gameName='Minecraft', price=19.99, cart=user_cart)
+                db.session.add(new_game)
+                db.session.commit()
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+
 if __name__ == "__main__":
     app.run(debug=True)
-
-#source activate coffeeshop

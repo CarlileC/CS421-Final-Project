@@ -31,14 +31,41 @@
           </tr>
         </thead>
         <tbody>
+          <!-- The for loops in the body create the item sub totals -->
           {% for coffee in user_coffee_items %}
-          <tr>
-            {% set total = 0 %}
-            {% set quantity = 0 %}
-            
-            <td class="product">{{coffee.name}}</th>
-          </tr>
+            {% set this_item_sub_total = coffee.quantity * coffee.price %}
+            <tr>
+              <td class="product">{{ coffee.coffeeName }}</td>
+              <td class="price">{{ '%0.2f'| format(coffee.price|float) }}</td>
+              <td class="quantity">{{ coffee.quantity }}</td>
+              <td class="total">{{ '%0.2f'| format(this_item_sub_total|float) }}</td>
+            </tr>
+          {% endfor%}
+
+          {% for book in user_book_items %}
+            {% set this_item_sub_total = book.quantity * book.price %}
+            <tr>
+              <td class="product">{{ book.bookName }}</td>
+              <td class="price">{{ '%0.2f'| format(book.price|float) }}</td>
+              <td class="quantity">{{ book.quantity }}</td>
+              <td class="total">{{ '%0.2f'| format(this_item_sub_total|float) }}</td>
+            </tr>
           {% endfor %}
+          {% for game in user_game_items %}
+            {% set this_item_sub_total = game.quantity * game.price %}
+            <tr>
+              <td class="product">{{ game.gameName }}</td>
+              <td class="price">{{ '%0.2f'| format(game.price|float) }}</td>
+              <td class="quantity">{{ game.quantity }}</td>
+              <td class="total">{{ '%0.2f'| format(this_item_sub_total|float) }}</td>
+            </tr>
+          {% endfor %}
+          <tr class="subTotalRow">
+            <td class="subTotal"><strong>Sub Total</strong>: </td>
+            <td></td>
+            <td></td>
+            <td class="subTotal"><strong>{{ '%0.2f'| format(items_sub_total|float) }}</strong></td>
+          </tr>
         </tbody>
       </table>
       </form>

@@ -236,3 +236,11 @@ border-collapse: collapse; /* Ensure no space between table cells */
 .yourCart{
 padding: 0 100px;
 }
+
+.subTotalRow{
+    padding-top: 20px;
+}
+
+.subTotal{
+    padding-top: 20px;
+}
