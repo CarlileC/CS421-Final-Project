@@ -8,7 +8,7 @@ from utilities import passwordCheck
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, validators
 from wtforms.validators import InputRequired, EqualTo
 
 app = Flask(__name__)
@@ -31,7 +31,8 @@ class User(UserMixin, db.Model):
     lastName = db.Column(db.Text)
     password = db.Column(db.Text)
     email = db.Column(db.Text, unique = True)
-    cart = db.relationship('Cart', backref='user', uselist=False, lazy=True) 
+    cart = db.relationship('Cart', backref='user', uselist=False, lazy=True)
+    comments = db.relationship('Comment', back_populates='user', lazy=True)
     """
     line 34 creates a relationship between the user and the cart, backref='user' essentially creates a user attribute for the cart which lets a cart object access
     a user, uselist=False makes it a one-to-one relationship with cart, lazy=True means that cart items won't be loaded unless the cart is accessed
@@ -84,8 +85,7 @@ class VideoGame(db.Model):
 
 class Cart(db.Model):
     __tablename__="Cart"
-
-    
+   
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     coffeeItems = db.relationship('Coffee', back_populates="cart", lazy=True)
@@ -95,6 +95,16 @@ class Cart(db.Model):
     line 84 creates the link between the user and the cart just like in the 'product' models
     lines 85-87 create the cart attributes for each 
     """
+
+class Comment(db.Model):
+    __tablename__='Comments'
+
+    id = db.Column(db.Integer, primary_key = True)
+
+    summary = db.Column('Summary', db.String(100))
+    comment = db.Column('Comment', db.String(500))
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    user = db.relationship('User', back_populates='comments', lazy=True)
 
 with app.app_context():
     db.create_all()
@@ -141,6 +151,11 @@ class SelectRDRItemsForm(FlaskForm):
 class SelectMCItemsForm(FlaskForm):
     product_choice = SelectField(choices=['Potion of Energy', 'Minecraft'])
     submit = SubmitField('Add to Cart')
+
+class CreateCommentForm(FlaskForm):
+    summary = TextAreaField('Summary', [validators.optional(), validators.length(max=100)])
+    comment = TextAreaField('Comment', [validators.optional(), validators.length(max=500)])
+    submit = SubmitField('Post Comment')
 
 @login_manager.user_loader
 def get_user(user_id):
@@ -301,7 +316,13 @@ def SecondBreakfast():
                 new_book = Book(bookName='The Lord of the Rings', price=89.99, cart=user_cart)
                 db.session.add(new_book)
                 db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        new_comment = Comment(summary=comment_form.summary.data, comment=comment_form.comment.data, user_id=current_user.id, user=current_user)
+        db.session.add(new_comment)
+        user_comments_list = list(Comment.query.all())
+        db.session.commit()
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown, comment_form=comment_form, user_comments_list=user_comments_list)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
