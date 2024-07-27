@@ -256,7 +256,7 @@ def SecondBreakfast():
                 coffee_item.quantity += 1
                 db.session.commit()
             else:       # create a new object
-                new_coffee = Coffee(coffeeName='Second Breakfast', favCount=0, price=19.99, cart=user_cart)
+                new_coffee = Coffee(coffeeName='Second Breakfast', favCount=0, price=19.99, cart=user_cart) # do not know what to do with favCount
                 db.session.add(new_coffee)
                 db.session.commit()
         elif product == 'The Lord of the Rings':

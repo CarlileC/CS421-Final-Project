@@ -33,10 +33,10 @@
         <tbody>
           <!-- The for loops in the body create the item sub totals -->
           {% for coffee in user_coffee_items %}
-            {% set this_item_sub_total = coffee.quantity * coffee.price %}
+            {% set this_item_sub_total = coffee.quantity * coffee.price %} <!-- jinja way to set a variable, this_item_sub_total is declared here-->
             <tr>
               <td class="product">{{ coffee.coffeeName }}</td>
-              <td class="price">{{ '%0.2f'| format(coffee.price|float) }}</td>
+              <td class="price">{{ '%0.2f'| format(coffee.price|float) }}</td> <!-- format float to round to the hundredths place -->
               <td class="quantity">{{ coffee.quantity }}</td>
               <td class="total">{{ '%0.2f'| format(this_item_sub_total|float) }}</td>
             </tr>
