@@ -18,8 +18,11 @@
     </div>
     <div class="coffeeText">
       <p> {{coffeeDescription}}<br></p>
-
-
+          {% if current_user.is_authenticated %}
+          <form method="post">
+            <input type ="submit" value ="Favorite">
+          </form>
+          {% endif %}
           <!-- Form to add items into the cart -->
           <form>
           <select name="optionSelect" id="optionSelect">

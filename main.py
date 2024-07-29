@@ -3,7 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from coffeeInfo import descriptionChoice
+from sqlalchemy import desc
+from coffeeInfo import descriptionChoice, popularPicks
 from utilities import passwordCheck
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask_migrate import Migrate
@@ -59,6 +60,14 @@ class Coffee(db.Model):
     favCount = db.Column(db.Integer)
     price = db.Column(db.Float, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
+    
+    def __init__(self, coffeeName, favCount, price):
+        self.coffeeName =coffeeName
+        self.favCount = favCount
+        self.price = price
+    
+    def __repr__(self):
+        return f"ID: {self.id} Name: {self.coffeeName} Fav: {self.favCount} Price: {self.price} "
 
 class Book(db.Model):
     __tablename__="Book"
@@ -89,7 +98,7 @@ class Cart(db.Model):
     line 84 creates the link between the user and the cart just like in the 'product' models
     lines 85-87 create the cart attributes for each 
     """
-    
+
 class Favorite(db.Model):
     __tablename__="Favorite"
     
@@ -97,7 +106,9 @@ class Favorite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False) 
     coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'), nullable=False)
     #many to many relationship between user and coffee
-
+    def __repr__(self):
+        return f"ID: {self.id} user_id: {self.user_id} coffee_id: {self.coffee_id}"
+    
 with app.app_context():
     db.create_all()
 #END SECTION
@@ -116,7 +127,7 @@ class SignUpForm(FlaskForm):
     confirmPassword = PasswordField('Confirm Password', validators=[InputRequired(), EqualTo('password', message='Passwords must be the same')])
     firstName = StringField('First Name', validators = [InputRequired()])
     lastName = StringField('Last Name', validators = [InputRequired()])
-
+    
 @login_manager.user_loader
 def get_user(user_id):
     return User.query.get(user_id)
@@ -124,7 +135,11 @@ def get_user(user_id):
 #Renders the home page
 @app.route('/')
 def index():
-    return render_template('index.html')
+    favorites = Coffee.query.order_by(desc(Coffee.favCount)).all()
+    popular1 = popularPicks(favorites[0].coffeeName)
+    popular2 = popularPicks(favorites[1].coffeeName)
+    popular3 = popularPicks(favorites[2].coffeeName)
+    return render_template('index.html', popular1=popular1, popular2=popular2, popular3=popular3)
 
 
 #Sign In
@@ -205,23 +220,47 @@ def CoffeeList():
 
 #I hate the function I made to clean this up. Is there a better way?
 #descriptionChoice located in coffeeInfo.py
-@app.route('/SecondBreakfast')
+@app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
     infoList = descriptionChoice("Second Breakfast")
-
+    if request.method == "POST":
+        coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="Second Breakfast").first()
+        if db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first() is None:
+            new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
+            coffee_to_fav.favCount = Coffee.favCount + 1
+            db.session.add(new_favorite)
+            db.session.commit()
+        else:
+            print("already favorited")
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
 
 
-@app.route('/TheRoastOfLeaves')
+@app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
     infoList = descriptionChoice("The Roast of Leaves")
-
+    if request.method == "POST":
+        coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="The Roast of Leaves").first()
+        if db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first() is None:
+            new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
+            coffee_to_fav.favCount = Coffee.favCount + 1
+            db.session.add(new_favorite)
+            db.session.commit()
+        else:
+            print("already favorited")
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
 
 @app.route('/AtTheCupsOfMadness')
 def AtTheCupsOfMadness():
-    infoList = descriptionChoice("At the Cups of Maddness")
-
+    infoList = descriptionChoice("At the Cups of Madness")
+    if request.method == "POST":
+        coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="At the Cups of Madness").first()
+        if db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first() is None:
+            new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
+            coffee_to_fav.favCount = Coffee.favCount + 1
+            db.session.add(new_favorite)
+            db.session.commit()
+        else:
+            print("already favorited")
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
     
 if __name__ == "__main__":
