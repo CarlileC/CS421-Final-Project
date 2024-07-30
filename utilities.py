@@ -1,4 +1,5 @@
 from markupsafe import Markup
+import random
 
 def passwordCheck(password:str, confirmPassword:str) -> list:    
         upper = False
@@ -74,3 +75,9 @@ def add_game_to_cart(db, game_name, user_cart, VideoGame, CartItem, price):
         new_item = CartItem(game_id=game.id, cart_id=user_cart.id, price=price)
         db.session.add(new_item)
         db.session.commit()
+
+def order_number_generator(Order):
+    new_id = random.randint(1, 10000000000)
+    while Order.query.get(new_id) is not None:
+        new_id = random.randint(1, 10000000000)
+    return new_id

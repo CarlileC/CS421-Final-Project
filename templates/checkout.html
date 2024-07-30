@@ -6,6 +6,12 @@
     <title>checkout</title>
 </head>
 <body>
-    
+    {% extends "base.html" %}
+    {% block content %}
+    <div>
+        <h1><strong>Thank you for your purchase!</strong></h1>
+        <h1><strong>Your Order Number is #{{order_number}}</strong></h1>
+    </div>
+    {% endblock %}
 </body>
 </html>

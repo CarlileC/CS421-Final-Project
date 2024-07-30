@@ -4,7 +4,7 @@ from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from coffeeInfo import descriptionChoice
-from utilities import passwordCheck, add_coffee_to_cart, add_book_to_cart, add_game_to_cart
+from utilities import passwordCheck, add_coffee_to_cart, add_book_to_cart, add_game_to_cart, order_number_generator
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
@@ -61,7 +61,7 @@ class CartItem(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('Videogame.id'))
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'))
     quantity = db.Column(db.Integer, default = 1)
-    price = db.Column(db.Integer)
+    price = db.Column(db.Float)
 
 class Coffee(db.Model):
     __tablename__="Coffee"
@@ -76,7 +76,6 @@ class Book(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     bookName = db.Column(db.Text, nullable = False)
-    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
 
 class VideoGame(db.Model):
@@ -94,12 +93,19 @@ class Cart(db.Model):
     coffee_items = db.relationship('Coffee', secondary=CartItem.__table__, back_populates="carts", viewonly=True, lazy=True) 
     book_items = db.relationship('Book', secondary=CartItem.__table__, back_populates='carts', viewonly=True, lazy=True)
     game_items = db.relationship('VideoGame', secondary=CartItem.__table__, back_populates='carts', viewonly=True, lazy=True)
+    orders = db.relationship('Order', back_populates='cart')
 
     """
-    cart and the product models are linked by a table callted CartItems
+    cart and the product models are linked by a table called CartItems
     """
 
-    
+class Order(db.Model):
+    __tablename__="orders"
+
+    id = db.Column(db.Integer, primary_key = True)
+    order_number = db.Column(db.Integer, default=None)
+    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'))
+    cart = db.relationship('Cart', back_populates='orders')
 
 with app.app_context():
     db.create_all()
@@ -286,6 +292,18 @@ def delete_game(game_id):
         db.session.delete(game_item)
         db.session.commit()
     return redirect(url_for('cart'))
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    new_order = Order()
+    db.session.add(new_order)
+    db.session.commit()
+    db.session.flush()
+    if new_order.order_number == None:
+        new_order.order_number = order_number_generator(Order)
+        db.session.commit()
+    order_number = new_order.order_number
+    return render_template('checkout.html', order_number=order_number)
 
 @app.route('/CoffeeList')
 def CoffeeList():
