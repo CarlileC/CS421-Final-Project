@@ -41,3 +41,36 @@ def passwordCheck(password:str, confirmPassword:str) -> list:
             message += "</ul>"
             returnMessage = Markup(message)
             return [False, returnMessage]
+        
+def add_coffee_to_cart(db, coffee_name, user_cart, Coffee, CartItem, price):
+    coffee = Coffee.query.filter_by(coffeeName=coffee_name).first()
+    coffee_item = CartItem.query.filter_by(cart_id=user_cart.id, coffee_id=coffee.id).first()
+    if coffee_item: # for quantity, check to see if an item exists already, if it does, increase the quantity
+        coffee_item.quantity += 1
+        db.session.commit()
+    else:       # create a new object
+        new_item = CartItem(coffee_id=coffee.id, cart_id=user_cart.id, price=price)
+        db.session.add(new_item)
+        db.session.commit()
+
+def add_book_to_cart(db, book_name, user_cart, Book, CartItem, price):
+    book = Book.query.filter_by(bookName=book_name).first()
+    book_item = CartItem.query.filter_by(cart_id=user_cart.id, book_id=book.id).first()
+    if book_item:
+        book_item.quantity += 1
+        db.session.commit()
+    else:
+        new_item = CartItem(book_id=book.id, cart_id=user_cart.id, price=price)
+        db.session.add(new_item)
+        db.session.commit()
+
+def add_game_to_cart(db, game_name, user_cart, VideoGame, CartItem, price):
+    game = VideoGame.query.filter_by(gameName=game_name).first()
+    game_item = CartItem.query.filter_by(cart_id=user_cart.id, game_id=game.id).first()
+    if game_item:
+        game_item.quantity += 1
+        db.session.commit()
+    else:
+        new_item = CartItem(game_id=game.id, cart_id=user_cart.id, price=price)
+        db.session.add(new_item)
+        db.session.commit()

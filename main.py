@@ -4,7 +4,7 @@ from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from coffeeInfo import descriptionChoice
-from utilities import passwordCheck
+from utilities import passwordCheck, add_coffee_to_cart, add_book_to_cart, add_game_to_cart
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
@@ -50,54 +50,76 @@ class User(UserMixin, db.Model):
 """
 line 56, line 68, line76 creates a new column that allows item to be attached to a cart id (db.ForeignKey('Cart.id'))
 (if i am understanding it correctly)
-"""    
+"""
+
+class CartItem(db.Model):
+    __tablename__ ='cart_items'
+
+    id = db.Column(db.Integer, primary_key = True)
+    coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'))
+    book_id = db.Column(db.Integer, db.ForeignKey('Book.id'))
+    game_id = db.Column(db.Integer, db.ForeignKey('Videogame.id'))
+    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'))
+    quantity = db.Column(db.Integer, default = 1)
+    price = db.Column(db.Integer)
+
 class Coffee(db.Model):
     __tablename__="Coffee"
     
     id = db.Column(db.Integer, primary_key = True)
     coffeeName = db.Column(db.Text, nullable = False)
     favCount = db.Column(db.Integer)
-    price = db.Column(db.Float, nullable = False)
-    quantity = db.Column(db.Integer, default = 1)
-    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
-    cart = db.relationship('Cart', back_populates='coffeeItems')
+    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
 
 class Book(db.Model):
     __tablename__="Book"
 
     id = db.Column(db.Integer, primary_key = True)
     bookName = db.Column(db.Text, nullable = False)
-    price = db.Column(db.Float, nullable = False)
-    quantity = db.Column(db.Integer, default = 1)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
-    cart = db.relationship('Cart', back_populates='bookItems')
+    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
 
 class VideoGame(db.Model):
     __tablename__="Videogame"
 
     id = db.Column(db.Integer, primary_key = True)
     gameName = db.Column(db.Text, nullable = False)
-    price = db.Column(db.Float, nullable = False)
-    quantity = db.Column(db.Integer, default = 1)
-    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
-    cart = db.relationship('Cart', back_populates='gameItems')
+    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='game_items', viewonly=True)
 
 class Cart(db.Model):
     __tablename__="Cart"
-
     
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
-    coffeeItems = db.relationship('Coffee', back_populates="cart", lazy=True)
-    bookItems = db.relationship('Book', back_populates='cart', lazy=True)
-    gameItems = db.relationship('VideoGame', back_populates='cart', lazy=True)
+    coffee_items = db.relationship('Coffee', secondary=CartItem.__table__, back_populates="carts", viewonly=True, lazy=True) 
+    book_items = db.relationship('Book', secondary=CartItem.__table__, back_populates='carts', viewonly=True, lazy=True)
+    game_items = db.relationship('VideoGame', secondary=CartItem.__table__, back_populates='carts', viewonly=True, lazy=True)
+
     """
-    line 84 creates the link between the user and the cart just like in the 'product' models
-    lines 85-87 create the cart attributes for each 
+    cart and the product models are linked by a table callted CartItems
     """
+
+    
 
 with app.app_context():
     db.create_all()
+
+    coffee = Coffee.query.filter_by(coffeeName='Second Breakfast').first()
+    if not coffee:
+        db.session.add(Coffee(coffeeName='Second Breakfast', favCount=0))
+        db.session.add(Coffee(coffeeName='The Roast of Leaves', favCount=0))
+        db.session.add(Coffee(coffeeName='At the Cups of Madness', favCount=0))
+        db.session.add(Coffee(coffeeName='The Silverhand Special', favCount=0))
+        db.session.add(Coffee(coffeeName='Western Nostalgia', favCount=0))
+        db.session.add(Coffee(coffeeName='Potion of Energy', favCount=0))
+        db.session.add(Book(bookName='The Lord of the Rings'))
+        db.session.add(Book(bookName='The House of Leaves'))
+        db.session.add(Book(bookName='At the Mountains of Madness'))
+        db.session.add(VideoGame(gameName='Cyberpunk 2077'))
+        db.session.add(VideoGame(gameName='Red Dead Redemption 2'))
+        db.session.add(VideoGame(gameName='Minecraft'))
+        db.session.commit()
+    
 #END SECTION
 
 """
@@ -216,39 +238,36 @@ def signout():
 @login_required
 def cart():
     if current_user:
-        user_cart = current_user.cart
-        user_coffee_items = user_cart.coffeeItems
-        user_book_items = user_cart.bookItems
-        user_game_items = user_cart.gameItems
-        coffee_item_sub_total = 0
-        book_item_sub_total = 0
-        game_item_sub_total = 0
-        for coffee in user_coffee_items:
-            coffee_item_sub_total += coffee.price * coffee.quantity
-        for book in user_book_items:
-            book_item_sub_total += book.price * book.quantity
-        for game in user_game_items:
-            game_item_sub_total += game.price * game.quantity
-        items_sub_total = coffee_item_sub_total + book_item_sub_total + game_item_sub_total     # calculate the sub total for all items
-        return render_template('cart.html', current_user=current_user, user_coffee_items=user_coffee_items, user_book_items=user_book_items, user_game_items=user_game_items, items_sub_total=items_sub_total)
+        coffee_class = Coffee
+        book_class = Book
+        game_class = VideoGame
+        cart_items = CartItem.query.filter_by(cart_id=current_user.id)
+        total = 0
+        for item in cart_items:
+            total = total + item.quantity * item.price
+        return render_template('cart.html', total=total,
+                               cart_items=cart_items,
+                               coffee_class=coffee_class,
+                               book_class=book_class,
+                               game_class=game_class)
     else:
         return render_template('SecretPage.html')
     
 @app.route("/delete-coffee/<int:coffee_id>", methods=['POST'])
 @login_required
 def delete_coffee(coffee_id):
-    coffee_item = Coffee.query.filter_by(cart_id=current_user.id, id=coffee_id).first_or_404()
-    if coffee_item.quantity > 1:
-        coffee_item.quantity -= 1
+    cart_item = CartItem.query.filter_by(cart_id=current_user.id, coffee_id=coffee_id).first_or_404()
+    if cart_item.quantity > 1:
+        cart_item.quantity -= 1
         db.session.commit()
-    elif coffee_item.quantity <= 1:
-        db.session.delete(coffee_item)
+    elif cart_item.quantity <= 1:
+        db.session.delete(cart_item)
         db.session.commit()
     return redirect(url_for('cart'))
 
 @app.route("/delete-book/<int:book_id>", methods=['POST'])
 def delete_book(book_id):
-    book_item = Book.query.filter_by(cart_id=current_user.id, id=book_id).first_or_404()
+    book_item = CartItem.query.filter_by(cart_id=current_user.id, book_id=book_id).first_or_404()
     if book_item.quantity > 1:
         book_item.quantity -= 1
         db.session.commit()
@@ -259,7 +278,7 @@ def delete_book(book_id):
 
 @app.route("/delete-game/<int:game_id>", methods=['POST'])
 def delete_game(game_id):
-    game_item = VideoGame.query.filter_by(cart_id=current_user.id, id=game_id).first_or_404()
+    game_item = CartItem.query.filter_by(cart_id=current_user.id, game_id=game_id).first_or_404()
     if game_item.quantity > 1:
         game_item.quantity -= 1
         db.session.commit()
@@ -278,166 +297,80 @@ def CoffeeList():
 #descriptionChoice located in coffeeInfo.py
 @app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
-    coffeeDropDown = SelectLotrItemsForm()
+    drop_down = SelectLotrItemsForm()
     infoList = descriptionChoice("Second Breakfast")
-    user_cart = current_user.cart
-    if coffeeDropDown.validate_on_submit():
-        product = coffeeDropDown.product_choice.data
+    if drop_down.validate_on_submit():
+        product = drop_down.product_choice.data
         if product == 'Second Breakfast':
-            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='Second Breakfast').first()
-            if coffee_item: # for quantity, check to see if an item exists already, if it does, increase the quantity
-                coffee_item.quantity += 1
-                db.session.commit()
-            else:       # create a new object
-                new_coffee = Coffee(coffeeName='Second Breakfast', favCount=0, price=19.99, cart=user_cart) # do not know what to do with favCount
-                db.session.add(new_coffee)
-                db.session.commit()
+            add_coffee_to_cart(db, 'Second Breakfast', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The Lord of the Rings':
-            book_item = Book.query.filter_by(cart_id=current_user.id, bookName='The Lord of the Rings').first()
-            if book_item:
-                book_item.quantity += 1
-                db.session.commit()
-            else:
-                new_book = Book(bookName='The Lord of the Rings', price=89.99, cart=user_cart)
-                db.session.add(new_book)
-                db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+            add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
-    coffeeDropDown = SelectHoLItemsForm()
+    drop_down = SelectHoLItemsForm()
     infoList = descriptionChoice("The Roast of Leaves")
-    user_cart = current_user.cart
-    if coffeeDropDown.validate_on_submit():
-        product = coffeeDropDown.product_choice.data
+    if drop_down.validate_on_submit():
+        product = drop_down.product_choice.data
         if product == 'The Roast of Leaves':
-            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='The Roast of Leaves').first()
-            if coffee_item:
-                coffee_item.quantity += 1
-                db.session.commit()
-            else:
-                new_coffee = Coffee(coffeeName='The Roast of Leaves', favCount=0, price=19.99, cart=user_cart)
-                db.session.add(new_coffee)
-                db.session.commit()
+            add_coffee_to_cart(db, 'The Roast of Leaves', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The House of Leaves':
-            book_item = Book.query.filter_by(cart_id=current_user.id, bookName='The House of Leaves').first()
-            if book_item:
-                book_item.quantity += 1
-                db.session.commit()
-            else:
-                new_book = Book(bookName='The House of Leaves', price=29.99, cart=user_cart)
-                db.session.add(new_book)
-                db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+            add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
 
 @app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
-    coffeeDropDown = SelectAtHoMItemsForm()
+    drop_down = SelectAtHoMItemsForm()
     infoList = descriptionChoice("At the Cups of Maddness")
     user_cart = current_user.cart
-    if coffeeDropDown.validate_on_submit():
-        product = coffeeDropDown.product_choice.data
+    if drop_down.validate_on_submit():
+        product = drop_down.product_choice.data
         if product == 'At the Cups of Madness':
-            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='At the Cups of Madness').first()
-            if coffee_item:
-                coffee_item.quantity += 1
-                db.session.commit()
-            else:
-                new_coffee = Coffee(coffeeName='At the Cups of Madness', favCount=0, price=19.99, cart=user_cart)
-                db.session.add(new_coffee)
-                db.session.commit()
+            add_coffee_to_cart(db, 'At the Cups of Madness', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'At the Mountains of Madness':
-            book_item = Book.query.filter_by(cart_id=current_user.id, bookName='At the Mountains of Madness').first()
-            if book_item:
-                book_item.quantity += 1
-                db.session.commit()
-            else:
-                new_book = Book(bookName='At the Mountains of Madness', price=25.99, cart=user_cart)
-                db.session.add(new_book)
-                db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+            add_book_to_cart(db, 'At the Mountains of Madness', current_user.cart, Book, CartItem, 25.99)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
 def silver_hand_special():
-    coffeeDropDown = SelectCyberPunkItemsForm()
+    drop_down = SelectCyberPunkItemsForm()
     infoList = descriptionChoice('The Silverhand Special')
     user_cart = current_user.cart
-    if coffeeDropDown.validate_on_submit():
-        product = coffeeDropDown.product_choice.data
+    if drop_down.validate_on_submit():
+        product = drop_down.product_choice.data
         if product == 'The Silverhand Special':
-            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='The Silverhand Special').first()
-            if coffee_item:
-                coffee_item.quantity += 1
-                db.session.commit()
-            else:
-                new_coffee = Coffee(coffeeName='The Silverhand Special', favCount=0, price=19.99, cart=user_cart)
-                db.session.add(new_coffee)
-                db.session.commit()
+            add_coffee_to_cart(db, 'The Silverhand Special', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Cyberpunk 2077':
-            game_item = VideoGame.query.filter_by(cart_id=current_user.id, gameName='Cyberpunk 2077').first()
-            if game_item:
-                game_item.quantity == 1
-                db.session.commit()
-            else:
-                new_game = VideoGame(gameName='Cyberpunk 2077', price=59.99, cart=user_cart)
-                db.session.add(new_game)
-                db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+            add_game_to_cart(db, 'Cyberpunk 2077', current_user.cart, VideoGame, CartItem, 59.99)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
 def western_nostalgia():
-    coffeeDropDown = SelectRDRItemsForm()
+    drop_down = SelectRDRItemsForm()
     infoList = descriptionChoice('Western Nostalgia')
     user_cart = current_user.cart
-    if coffeeDropDown.validate_on_submit():
-        product = coffeeDropDown.product_choice.data
+    if drop_down.validate_on_submit():
+        product = drop_down.product_choice.data
         if product == 'Western Nostalgia':
-            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='Western Nostalgia').first()
-            if coffee_item:
-                coffee_item.quantity +=1
-                db.session.commit()
-            else:
-                new_coffee = Coffee(coffeeName='Western Nostalgia', favCount=0, price=19.99, cart=user_cart)
-                db.session.add(new_coffee)
-                db.session.commit()
+            add_coffee_to_cart(db, 'Western Nostalgia', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Red Dead Redemption 2':
-            game_item = VideoGame.query.filter_by(cart_id=current_user.id, gameName='Red Dead Redemption 2').first()
-            if game_item:
-                game_item.quantity += 1
-                db.session.commit()
-            else:
-                new_game = VideoGame(gameName='Red Dead Redemption 2', price=59.99, cart=user_cart)
-                db.session.add(new_game)
-                db.session.commit()
-    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+            add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
+    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
 def potion_of_energy():
-    coffeeDropDown = SelectMCItemsForm()
+    drop_down = SelectMCItemsForm()
     infoList = descriptionChoice('Potion of Energy')
     user_cart = current_user.cart
-    if coffeeDropDown.validate_on_submit():
-        product = coffeeDropDown.product_choice.data
+    if drop_down.validate_on_submit():
+        product = drop_down.product_choice.data
         if product == 'Potion of Energy':
-            coffee_item = Coffee.query.filter_by(cart_id=current_user.id, coffeeName='Potion of Energy').first()
-            if coffee_item:
-                coffee_item.quantity += 1
-                db.session.commit()
-            else:
-                new_coffee = Coffee(coffeeName='Potion of Energy', favCount=0, price=19.99, cart=user_cart)
-                db.session.add(new_coffee)
-                db.session.commit()
+            add_coffee_to_cart(db, 'Potion of Energy', current_user.cart, Coffee, CartItem, 19.99)
         if product == 'Minecraft':
-            game_item = VideoGame.query.filter_by(cart_id=current_user.id, gameName='Minecraft').first()
-            if game_item:
-                game_item.quantity += 1
-                db.session.commit()
-            else:
-                new_game = VideoGame(gameName='Minecraft', price=19.99, cart=user_cart)
-                db.session.add(new_game)
-                db.session.commit()
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropDown=coffeeDropDown)
+            add_game_to_cart(db, 'Minecraft', current_user.cart, VideoGame, CartItem, 19.99)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
 
 if __name__ == "__main__":
     app.run(debug=True)
