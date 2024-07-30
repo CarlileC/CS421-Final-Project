@@ -1,5 +1,6 @@
 from markupsafe import Markup
 
+
 def passwordCheck(password:str, confirmPassword:str) -> list:    
         upper = False
         lower = False
@@ -41,3 +42,30 @@ def passwordCheck(password:str, confirmPassword:str) -> list:
             message += "</ul>"
             returnMessage = Markup(message)
             return [False, returnMessage]
+        
+
+def fav_or_unfav(db, favorite_button, current_coffee, current_user, Favorite, Coffee):
+    if(favorite_button.submit.label.text == "Favorite"):
+        new_favorite = Favorite(user_id = current_user.id, coffee_id = current_coffee.id)
+        current_coffee.favCount = Coffee.favCount + 1
+        db.session.add(new_favorite)
+        db.session.commit()
+        favorite_button.submit.label.text = "Unfavorite"      
+        print("Favorite Pressed")
+        print(current_user.Coffee)
+    else:
+        db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == current_coffee.id).delete()
+        current_coffee.favCount = Coffee.favCount - 1
+        db.session.commit()
+        favorite_button.submit.label.text = "Favorite"
+        print("Unfavorite Pressed")
+        print(current_user.Coffee)
+        
+def favoriting_info(db, current_user, favorite_button, Coffee, coffee_name):
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffeeName==coffee_name).first()
+        #These two lines are changing how the favorite button is rendered on the render_template function below
+    if current_coffee not in current_user.Coffee:
+        favorite_button.submit.label.text = "Favorite"
+    else:
+        favorite_button.submit.label.text = "Unfavorite"
+    return [current_coffee, favorite_button]
