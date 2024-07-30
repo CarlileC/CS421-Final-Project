@@ -32,6 +32,11 @@ class Favorite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False) 
     coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'), nullable=False)
     #many to many relationship between user and coffee
+    def __init__(self, user_id, coffee_id):
+        self. user_id = user_id
+        self. coffee_id = coffee_id
+
+        
     def __repr__(self):
         return f"ID: {self.id} user_id: {self.user_id} coffee_id: {self.coffee_id}"
     
@@ -134,7 +139,7 @@ class SignUpForm(FlaskForm):
 
 class FavoriteButton(FlaskForm):
     submit = SubmitField('Favorite')
-
+    
 @login_manager.user_loader
 def get_user(user_id):
     return User.query.get(user_id)
@@ -231,51 +236,87 @@ def CoffeeList():
 def SecondBreakfast():
     infoList = descriptionChoice("Second Breakfast")
     favorite_button = FavoriteButton()
-    if favorite_button.validate_on_submit():
-        coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="Second Breakfast").first()
-        user = User.query.get(current_user.id)
-        if coffee_to_fav not in user.Coffee:
-            new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
-            coffee_to_fav.favCount = Coffee.favCount + 1
-            db.session.add(new_favorite)
-            db.session.commit()
+    if current_user.is_authenticated:
+        current_coffee = db.session.query(Coffee).filter(Coffee.coffeeName=="Second Breakfast").first()
+        user = db.session.query(User).get(current_user.id)
+        #These two lines are changing how the favorite button is rendered on the render_template function below
+        if current_coffee not in user.Coffee:
+            favorite_button.submit.label.text = "Favorite"
         else:
-            print("already favorited")
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], favorite_button=favorite_button)
+            favorite_button.submit.label.text = "Unfavorite"
+
+    if favorite_button.validate_on_submit():
+        if(favorite_button.submit.label.text == "Favorite"):
+            new_favorite = Favorite(user_id = current_user.id, coffee_id = current_coffee.id)
+            current_coffee.favCount = Coffee.favCount + 1
+            db.session.add(new_favorite)
+            db.session.commit()      
+            print(user.Coffee)
+        else:
+            db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == current_coffee.id).delete()
+            current_coffee.favCount = Coffee.favCount - 1
+            db.session.commit()
+            print(user.Coffee)
+    
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], fav_unfav_button=favorite_button)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
     infoList = descriptionChoice("The Roast of Leaves")
     favorite_button = FavoriteButton()
-    if favorite_button.validate_on_submit():
-        coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="The Roast of Leaves").first()
-        user = User.query.get(current_user.id)
-        if coffee_to_fav not in user.Coffee:
-            new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
-            coffee_to_fav.favCount = Coffee.favCount + 1
-            db.session.add(new_favorite)
-            db.session.commit()
+    if current_user.is_authenticated:
+        current_coffee = db.session.query(Coffee).filter(Coffee.coffeeName=="The Roast of Leaves").first()
+        user = db.session.query(User).get(current_user.id)
+        #These two lines are changing how the favorite button is rendered on the render_template function below
+        if current_coffee not in user.Coffee:
+            favorite_button.submit.label.text = "Favorite"
         else:
-            print("already favorited")
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], favorite_button=favorite_button)
+            favorite_button.submit.label.text = "Unfavorite"
 
-@app.route('/AtTheCupsOfMadness')
+    if favorite_button.validate_on_submit():
+        if(favorite_button.submit.label.text == "Favorite"):
+            new_favorite = Favorite(user_id = current_user.id, coffee_id = current_coffee.id)
+            current_coffee.favCount = Coffee.favCount + 1
+            db.session.add(new_favorite)
+            db.session.commit()      
+            print(user.Coffee)
+        else:
+            db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == current_coffee.id).delete()
+            current_coffee.favCount = Coffee.favCount - 1
+            db.session.commit()
+            print(user.Coffee)
+    
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], fav_unfav_button=favorite_button)
+
+@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
     infoList = descriptionChoice("At the Cups of Madness")
     favorite_button = FavoriteButton()
-    if favorite_button.validate_on_submit():
-        coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="At the Cups of Madness").first()
-        user = User.query.get(current_user.id)
-        if coffee_to_fav not in user.Coffee:
-            new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
-            coffee_to_fav.favCount = Coffee.favCount + 1
-            db.session.add(new_favorite)
-            db.session.commit()
+    if current_user.is_authenticated:
+        current_coffee = db.session.query(Coffee).filter(Coffee.coffeeName=="At The Cups of Madness").first()
+        user = db.session.query(User).get(current_user.id)
+        #These two lines are changing how the favorite button is rendered on the render_template function below
+        if current_coffee not in user.Coffee:
+            favorite_button.submit.label.text = "Favorite"
         else:
-            print("already favorited")
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], favorite_button=favorite_button)
+            favorite_button.submit.label.text = "Unfavorite"
+
+    if favorite_button.validate_on_submit():
+        if(favorite_button.submit.label.text == "Favorite"):
+            new_favorite = Favorite(user_id = current_user.id, coffee_id = current_coffee.id)
+            current_coffee.favCount = Coffee.favCount + 1
+            db.session.add(new_favorite)
+            db.session.commit()      
+            print(user.Coffee)
+        else:
+            db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == current_coffee.id).delete()
+            current_coffee.favCount = Coffee.favCount - 1
+            db.session.commit()
+            print(user.Coffee)
     
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], fav_unfav_button=favorite_button)
+
 if __name__ == "__main__":
     app.run(debug=True)
 

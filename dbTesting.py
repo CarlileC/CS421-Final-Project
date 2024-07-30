@@ -13,9 +13,11 @@ from sqlalchemy import desc
 # db.session.commit()
 #This would normally be current_user_id = current_user.id
 
-user = User.query.get(1)
-# db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first()
-coffee = Coffee.query.filter(Coffee.coffeeName == "Second Breakfast").first()
-print(coffee)
 
-print(coffee not in user.Coffee)
+user = db.session.query(Favorite).all()
+
+favorite = Favorite(user_id = 2, coffee_id = 1)
+print(db.session.add(favorite))
+db.session.commit()
+# db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first()
+print(user)

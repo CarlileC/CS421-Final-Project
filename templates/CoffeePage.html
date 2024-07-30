@@ -20,8 +20,8 @@
       <p> {{coffeeDescription}}<br></p>
           {% if current_user.is_authenticated %}
           <form action="#" method="post">
-            {{ favorite_button.hidden_tag() }}
-            {{ favorite_button.submit }}
+            {{ fav_unfav_button.hidden_tag() }}
+            {{ fav_unfav_button.submit }}
           </form>
           {% endif %}
           <!-- Form to add items into the cart -->
