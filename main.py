@@ -24,6 +24,17 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 #THIS NEXT SECTION IS JUST TAKEN FROM LAB07, IT NEEDS TO BE CLEANED UP AND MOVED INTO A DIFFERENT FILE IDEALLY
+
+class Favorite(db.Model):
+    __tablename__="Favorite"
+    
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False) 
+    coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'), nullable=False)
+    #many to many relationship between user and coffee
+    def __repr__(self):
+        return f"ID: {self.id} user_id: {self.user_id} coffee_id: {self.coffee_id}"
+    
 class User(UserMixin, db.Model):
     __tablename__="Users"
     
@@ -32,6 +43,7 @@ class User(UserMixin, db.Model):
     lastName = db.Column(db.Text)
     password = db.Column(db.Text)
     email = db.Column(db.Text, unique = True)
+    coffees = db.relationship('Coffee', secondary=Favorite.__table__, backref='Users')
     cart = db.relationship('Cart', backref='user', uselist=False, lazy=True) 
     """
     line 34 creates a relationship between the user and the cart, backref='user' essentially creates a user attribute for the cart which lets a cart object access
@@ -59,6 +71,7 @@ class Coffee(db.Model):
     coffeeName = db.Column(db.Text, nullable = False)
     favCount = db.Column(db.Integer)
     price = db.Column(db.Float, nullable = False)
+    users = db.relationship('User', secondary=Favorite.__table__, backref='Coffee')
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     
     def __init__(self, coffeeName, favCount, price):
@@ -99,15 +112,6 @@ class Cart(db.Model):
     lines 85-87 create the cart attributes for each 
     """
 
-class Favorite(db.Model):
-    __tablename__="Favorite"
-    
-    id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False) 
-    coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'), nullable=False)
-    #many to many relationship between user and coffee
-    def __repr__(self):
-        return f"ID: {self.id} user_id: {self.user_id} coffee_id: {self.coffee_id}"
     
 with app.app_context():
     db.create_all()
@@ -127,7 +131,10 @@ class SignUpForm(FlaskForm):
     confirmPassword = PasswordField('Confirm Password', validators=[InputRequired(), EqualTo('password', message='Passwords must be the same')])
     firstName = StringField('First Name', validators = [InputRequired()])
     lastName = StringField('Last Name', validators = [InputRequired()])
-    
+
+class FavoriteButton(FlaskForm):
+    submit = SubmitField('Favorite')
+
 @login_manager.user_loader
 def get_user(user_id):
     return User.query.get(user_id)
@@ -223,45 +230,51 @@ def CoffeeList():
 @app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
     infoList = descriptionChoice("Second Breakfast")
-    if request.method == "POST":
+    favorite_button = FavoriteButton()
+    if favorite_button.validate_on_submit():
         coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="Second Breakfast").first()
-        if db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first() is None:
+        user = User.query.get(current_user.id)
+        if coffee_to_fav not in user.Coffee:
             new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
             coffee_to_fav.favCount = Coffee.favCount + 1
             db.session.add(new_favorite)
             db.session.commit()
         else:
             print("already favorited")
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], favorite_button=favorite_button)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
     infoList = descriptionChoice("The Roast of Leaves")
-    if request.method == "POST":
+    favorite_button = FavoriteButton()
+    if favorite_button.validate_on_submit():
         coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="The Roast of Leaves").first()
-        if db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first() is None:
+        user = User.query.get(current_user.id)
+        if coffee_to_fav not in user.Coffee:
             new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
             coffee_to_fav.favCount = Coffee.favCount + 1
             db.session.add(new_favorite)
             db.session.commit()
         else:
             print("already favorited")
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], favorite_button=favorite_button)
 
 @app.route('/AtTheCupsOfMadness')
 def AtTheCupsOfMadness():
     infoList = descriptionChoice("At the Cups of Madness")
-    if request.method == "POST":
+    favorite_button = FavoriteButton()
+    if favorite_button.validate_on_submit():
         coffee_to_fav = db.session.query(Coffee).filter(Coffee.coffeeName=="At the Cups of Madness").first()
-        if db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first() is None:
+        user = User.query.get(current_user.id)
+        if coffee_to_fav not in user.Coffee:
             new_favorite = Favorite(user_id = current_user.id, coffee_id = coffee_to_fav.id)
             coffee_to_fav.favCount = Coffee.favCount + 1
             db.session.add(new_favorite)
             db.session.commit()
         else:
             print("already favorited")
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3])
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], coffeeDropdown=infoList[3], favorite_button=favorite_button)
     
 if __name__ == "__main__":
     app.run(debug=True)
