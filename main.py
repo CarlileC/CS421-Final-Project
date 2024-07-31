@@ -303,17 +303,7 @@ def signup():
 #A fun reference, should be removed later
 @app.route('/secretpage', methods=['GET', 'POST'])
 def secretpage():
-        return render_template('secretpage.html', message=Markup(f"<h1>My name is Chris Houlihan. <br> This is my top secret page. <br> Keep it between us, OK?</h1>"))
-
-@app.route('/admin')
-@login_required
-def manager():
-    print(current_user.admin)
-    if current_user.admin:
-        return render_template('admin.html')
-    else:
-        redirect(url_for("index"))
-    
+        return render_template('secretpage.html', message=Markup(f"<h1>My name is Chris Houlihan. <br> This is my top secret page. <br> Keep it between us, OK?</h1>"))    
 
 @app.route("/signout")
 def signout():
