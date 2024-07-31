@@ -4,7 +4,7 @@ from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from coffeeInfo import descriptionChoice
-from utilities import passwordCheck, add_coffee_to_cart, add_book_to_cart, add_game_to_cart
+from utilities import passwordCheck, add_coffee_to_cart, add_book_to_cart, add_game_to_cart, add_new_comment
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
@@ -98,19 +98,7 @@ class Cart(db.Model):
 
     """
     cart and the product models are linked by a table callted CartItems
-    """
-
-    
-
-class Comment(db.Model):
-    __tablename__='Comments'
-
-    id = db.Column(db.Integer, primary_key = True)
-
-    summary = db.Column('Summary', db.String(100))
-    comment = db.Column('Comment', db.String(500))
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
-    user = db.relationship('User', back_populates='comments', lazy=True)
+    """  
 
 class Comment(db.Model):
     __tablename__='Comments'
@@ -333,10 +321,8 @@ def SecondBreakfast():
             add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
-        new_comment = Comment(summary=comment_form.summary.data, comment=comment_form.comment.data, user_id=current_user.id, user=current_user)
-        db.session.add(new_comment)
-        user_comments_list = list(Comment.query.all())
-        db.session.commit()
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user)
+    user_comments_list = list(Comment.query.all())
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 
@@ -350,59 +336,75 @@ def TheRoastOfLeaves():
             add_coffee_to_cart(db, 'The Roast of Leaves', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The House of Leaves':
             add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user)
+    user_comments_list = list(Comment.query.all())
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, user_comments_list=user_comments_list)
 
 @app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
     drop_down = SelectAtHoMItemsForm()
     infoList = descriptionChoice("At the Cups of Maddness")
-    user_cart = current_user.cart
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'At the Cups of Madness':
             add_coffee_to_cart(db, 'At the Cups of Madness', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'At the Mountains of Madness':
             add_book_to_cart(db, 'At the Mountains of Madness', current_user.cart, Book, CartItem, 25.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user)
+    user_comments_list = list(Comment.query.all())
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, user_comments_list=user_comments_list)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
 def silver_hand_special():
     drop_down = SelectCyberPunkItemsForm()
     infoList = descriptionChoice('The Silverhand Special')
-    user_cart = current_user.cart
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'The Silverhand Special':
             add_coffee_to_cart(db, 'The Silverhand Special', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Cyberpunk 2077':
             add_game_to_cart(db, 'Cyberpunk 2077', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user)
+    user_comments_list = list(Comment.query.all())
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, user_comments_list=user_comments_list)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
 def western_nostalgia():
     drop_down = SelectRDRItemsForm()
     infoList = descriptionChoice('Western Nostalgia')
-    user_cart = current_user.cart
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Western Nostalgia':
             add_coffee_to_cart(db, 'Western Nostalgia', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Red Dead Redemption 2':
             add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user)
+    user_comments_list = list(Comment.query.all())
+    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, user_comments_list=user_comments_list)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
 def potion_of_energy():
     drop_down = SelectMCItemsForm()
     infoList = descriptionChoice('Potion of Energy')
-    user_cart = current_user.cart
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Potion of Energy':
             add_coffee_to_cart(db, 'Potion of Energy', current_user.cart, Coffee, CartItem, 19.99)
         if product == 'Minecraft':
             add_game_to_cart(db, 'Minecraft', current_user.cart, VideoGame, CartItem, 19.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user)
+    user_comments_list = list(Comment.query.all())
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, user_comments_list=user_comments_list)
 
 if __name__ == "__main__":
     app.run(debug=True)
