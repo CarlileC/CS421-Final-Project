@@ -11,12 +11,16 @@ from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, HiddenField
 from wtforms.validators import InputRequired, EqualTo
+from flask_admin import Admin, AdminIndexView
+from flask_admin.contrib.sqla import ModelView
+
 
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'data.sqlite')
 app.config['SQL_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = "TEMP KEY"
+app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 db = SQLAlchemy(app)
 Migrate(app, db)
 
@@ -50,16 +54,18 @@ class User(UserMixin, db.Model):
     email = db.Column(db.Text, unique = True)
     coffees = db.relationship('Coffee', secondary=Favorite.__table__, backref='Users')
     cart = db.relationship('Cart', backref='user', uselist=False, lazy=True) 
+    admin = db.Column(db.Boolean, nullable=True)
     """
     line 34 creates a relationship between the user and the cart, backref='user' essentially creates a user attribute for the cart which lets a cart object access
     a user, uselist=False makes it a one-to-one relationship with cart, lazy=True means that cart items won't be loaded unless the cart is accessed
     """
     
-    def __init__(self, firstName, lastName, password, email):
+    def __init__(self, firstName, lastName, password, email, admin):
         self.firstName = firstName
         self.lastName = lastName
         self.password = password
         self.email = email
+        self.admin = admin
         
     def __repr__(self):
         return f"ID: {self.id} Name: {self.firstName} {self.lastName} Email: {self.email} Password: {self.password}"
@@ -89,10 +95,12 @@ class Coffee(db.Model):
     favCount = db.Column(db.Integer)
     users = db.relationship('User', secondary=Favorite.__table__, backref='Coffee')
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
+    stock = db.Column(db.Integer, nullable = False)
     
-    def __init__(self, coffeeName, favCount):
+    def __init__(self, coffeeName, favCount, stock):
         self.coffeeName =coffeeName
         self.favCount = favCount
+        self.stock = stock
     
     def __repr__(self):
         return f"ID: {self.id} Name: {self.coffeeName} Fav: {self.favCount}"
@@ -104,6 +112,7 @@ class Book(db.Model):
     bookName = db.Column(db.Text, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
+    stock = db.Column(db.Integer, nullable = False)
 
 class VideoGame(db.Model):
     __tablename__="Videogame"
@@ -111,6 +120,7 @@ class VideoGame(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     gameName = db.Column(db.Text, nullable = False)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='game_items', viewonly=True)
+    stock = db.Column(db.Integer, nullable = False)
 
 class Cart(db.Model):
     __tablename__="Cart"
@@ -125,26 +135,30 @@ class Cart(db.Model):
     cart and the product models are linked by a table callted CartItems
     """
 
+
 with app.app_context():
     db.create_all()
 
     coffee = Coffee.query.filter_by(coffeeName='Second Breakfast').first()
     if not coffee:
-        db.session.add(Coffee(coffeeName='Second Breakfast', favCount=0))
-        db.session.add(Coffee(coffeeName='The Roast of Leaves', favCount=0))
-        db.session.add(Coffee(coffeeName='At the Cups of Madness', favCount=0))
-        db.session.add(Coffee(coffeeName='The Silverhand Special', favCount=0))
-        db.session.add(Coffee(coffeeName='Western Nostalgia', favCount=0))
-        db.session.add(Coffee(coffeeName='Potion of Energy', favCount=0))
-        db.session.add(Book(bookName='The Lord of the Rings'))
-        db.session.add(Book(bookName='The House of Leaves'))
-        db.session.add(Book(bookName='At the Mountains of Madness'))
-        db.session.add(VideoGame(gameName='Cyberpunk 2077'))
-        db.session.add(VideoGame(gameName='Red Dead Redemption 2'))
-        db.session.add(VideoGame(gameName='Minecraft'))
+        db.session.add(Coffee(coffeeName='Second Breakfast', favCount=0, stock=10))
+        db.session.add(Coffee(coffeeName='The Roast of Leaves', favCount=0, stock = 10))
+        db.session.add(Coffee(coffeeName='At the Cups of Madness', favCount=0, stock = 10))
+        db.session.add(Coffee(coffeeName='The Silverhand Special', favCount=0, stock = 10))
+        db.session.add(Coffee(coffeeName='Western Nostalgia', favCount=0, stock = 10))
+        db.session.add(Coffee(coffeeName='Potion of Energy', favCount=0, stock = 10))
+        db.session.add(Book(bookName='The Lord of the Rings', stock = 10))
+        db.session.add(Book(bookName='The House of Leaves', stock = 10))
+        db.session.add(Book(bookName='At the Mountains of Madness', stock = 10))
+        db.session.add(VideoGame(gameName='Cyberpunk 2077', stock = 10))
+        db.session.add(VideoGame(gameName='Red Dead Redemption 2', stock = 10))
+        db.session.add(VideoGame(gameName='Minecraft', stock = 10))
         db.session.commit()
-    
-#END SECTION
+    admin_login = User.query.filter_by(email="admin@coffeeshop.com", password = "admin").first() #the unsecured router classic
+    if not admin_login:
+        db.session.add(User(firstName="admin", lastName="admin", password="admin", email="admin@coffeeshop.com", admin=True))
+        db.session.commit()
+
 
 """
 The forms for the signin and signup methods
@@ -192,6 +206,32 @@ class SelectMCItemsForm(FlaskForm):
     product_choice = SelectField(choices=[('Potion of Energy', 'Potion of Energy'), ('Minecraft','Minecraft')])
     submit = SubmitField('Add to Cart')
 
+class MyModelView(ModelView):
+    def is_accessible(self):
+        if current_user.is_authenticated:
+            if current_user.admin:
+                return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('index'))
+
+class MyAdminView(AdminIndexView):
+    def is_accessible(self):
+        if current_user.is_authenticated:
+            if current_user.admin:
+                return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('index'))
+
+admin = Admin(app, index_view=MyAdminView())
+admin.add_view(MyModelView(User, db.session))
+admin.add_view(MyModelView(Coffee, db.session))
+admin.add_view(MyModelView(VideoGame, db.session))
+admin.add_view(MyModelView(Book, db.session))
+
+
+
 @login_manager.user_loader
 def get_user(user_id):
     return User.query.get(user_id)
@@ -214,13 +254,18 @@ def signin():
         email = form.email.data
         password = form.password.data
         user = db.session.query(User).filter(User.email==email, User.password==password).first() #queries the database, looking if there is a combination in the database
+        print(user)
         if user is not None: #Is there a user? If so log them in
+            if user.admin:
+                login_user(user)
+                return redirect(url_for('admin.index'))
             login_user(user)
             return redirect(url_for('secretpage'))
         else: #No? Let them try again and give them an error
             return render_template('signin.html', errorMessage=Markup("<h2>Incorrect username or password"), form=form)
 
     return render_template('signin.html', form=form) #User clicks on the nav bar link
+
 
 #Still a little messy
 @app.route('/signup', methods=['GET', 'POST'])
@@ -237,7 +282,7 @@ def signup():
         
         if passwordInfo[0]: #password met requirements!
             try:
-                newUser = User(firstName=firstName, lastName=lastName, password=password, email=email)
+                newUser = User(firstName=firstName, lastName=lastName, password=password, email=email, admin=False)
                 db.session.add(newUser)
                 db.session.flush()  # Ensure the user ID is available
                 
@@ -259,6 +304,16 @@ def signup():
 @app.route('/secretpage', methods=['GET', 'POST'])
 def secretpage():
         return render_template('secretpage.html', message=Markup(f"<h1>My name is Chris Houlihan. <br> This is my top secret page. <br> Keep it between us, OK?</h1>"))
+
+@app.route('/admin')
+@login_required
+def manager():
+    print(current_user.admin)
+    if current_user.admin:
+        return render_template('admin.html')
+    else:
+        redirect(url_for("index"))
+    
 
 @app.route("/signout")
 def signout():
