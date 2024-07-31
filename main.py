@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, session, url_for
+from flask import Flask, render_template, redirect, session, url_for, jsonify
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
@@ -94,8 +94,8 @@ class Coffee(db.Model):
     coffeeName = db.Column(db.Text, nullable = False)
     favCount = db.Column(db.Integer)
     users = db.relationship('User', secondary=Favorite.__table__, backref='Coffee')
-    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
     stock = db.Column(db.Integer, nullable = False)
+    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
     
     def __init__(self, coffeeName, favCount, stock):
         self.coffeeName =coffeeName
@@ -111,8 +111,8 @@ class Book(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     bookName = db.Column(db.Text, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
-    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
     stock = db.Column(db.Integer, nullable = False)
+    carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
 
 class VideoGame(db.Model):
     __tablename__="Videogame"
@@ -254,7 +254,6 @@ def signin():
         email = form.email.data
         password = form.password.data
         user = db.session.query(User).filter(User.email==email, User.password==password).first() #queries the database, looking if there is a combination in the database
-        print(user)
         if user is not None: #Is there a user? If so log them in
             if user.admin:
                 login_user(user)
@@ -384,6 +383,8 @@ def SecondBreakfast():
         fav_unfav_button = ""
     if favorite_button.validate_on_submit():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
+        print("form submitted")
+        return jsonify(data={"Favorite".format(favorite_button.submit.data)})
     elif drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Second Breakfast':
