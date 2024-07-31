@@ -9,7 +9,7 @@ from utilities import passwordCheck, fav_or_unfav, favoriting_info, add_coffee_t
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, SelectField, HiddenField
 from wtforms.validators import InputRequired, EqualTo
 
 app = Flask(__name__)
@@ -90,13 +90,12 @@ class Coffee(db.Model):
     users = db.relationship('User', secondary=Favorite.__table__, backref='Coffee')
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
     
-    def __init__(self, coffeeName, favCount, price):
+    def __init__(self, coffeeName, favCount):
         self.coffeeName =coffeeName
         self.favCount = favCount
-        self.price = price
     
     def __repr__(self):
-        return f"ID: {self.id} Name: {self.coffeeName} Fav: {self.favCount} Price: {self.price} "
+        return f"ID: {self.id} Name: {self.coffeeName} Fav: {self.favCount}"
 
 class Book(db.Model):
     __tablename__="Book"
@@ -163,33 +162,34 @@ class SignUpForm(FlaskForm):
     lastName = StringField('Last Name:', validators = [InputRequired()])
 
 class FavoriteButton(FlaskForm):
+    field1 = HiddenField('Favorite Button')
     submit = SubmitField('Favorite')
     
 """Lord of the Rings"""
 class SelectLotrItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['Second Breakfast', 'The Lord of the Rings'])
+    product_choice = SelectField(choices=[('Second Breakfast', 'Second Breakfast'), ('The Lord of the Rings', 'The Lord of the Rings')])
     submit = SubmitField('Add to Cart')
 
 """House of Leaves"""
 class SelectHoLItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['The Roast of Leaves', 'The House of Leaves'])
+    product_choice = SelectField(choices=[('The Roast of Leaves', 'The Roast of Leaves'), ('The House of Leaves','The House of Leaves')])
     submit = SubmitField('Add to Cart')
 
-"""At the House of Madness"""
-class SelectAtHoMItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['At the Cups of Madness', 'At the Mountains of Madness'])
+"""At the Mountains of Madness"""
+class SelectAtMoMItemsForm(FlaskForm):
+    product_choice = SelectField(choices=[('At the Cups of Madness','At the Cups of Madness'), ('At the Mountains of Madness','At the Mountains of Madness')])
     submit = SubmitField('Add to Cart')
 
 class SelectCyberPunkItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['The Silverhand Special', 'Cyberpunk 2077'])
+    product_choice = SelectField(choices=[('The Silverhand Special', 'The Silverhand Special'), ('Cyberpunk 2077', 'Cyberpunk 2077')])
     submit = SubmitField('Add to Cart')
 
 class SelectRDRItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['Western Nostalgia', 'Red Dead Redemption 2'])
+    product_choice = SelectField(choices=[('Western Nostalgia','Western Nostalgia'), ('Red Dead Redemption 2','Red Dead Redemption 2')])
     submit = SubmitField('Add to Cart')
 
 class SelectMCItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['Potion of Energy', 'Minecraft'])
+    product_choice = SelectField(choices=[('Potion of Energy', 'Potion of Energy'), ('Minecraft','Minecraft')])
     submit = SubmitField('Add to Cart')
 
 @login_manager.user_loader
@@ -327,57 +327,63 @@ def CoffeeList():
 
 #I hate the function I made to clean this up. Is there a better way?
 #descriptionChoice located in coffeeInfo.py
-@app.route('/SecondBreakfast', methods=['GET', 'POST'], methods=['GET', 'POST'])
+@app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
-    drop_down = SelectLotrItemsForm()
+    drop_down = SelectLotrItemsForm(prefix='cart')
     infoList = descriptionChoice("Second Breakfast")
-    favorite_button = FavoriteButton()
+    favorite_button = FavoriteButton(prefix='favorite')
     if current_user.is_authenticated:
         favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Second Breakfast") #index 0 is current_coffee row, index 1 is the modified favorite button
+        fav_unfav_button = favorite_info[1]
+    else:
+        fav_unfav_button = ""
     if favorite_button.validate_on_submit():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
-    if drop_down.validate_on_submit():
+    elif drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Second Breakfast':
             add_coffee_to_cart(db, 'Second Breakfast', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The Lord of the Rings':
             add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=favorite_info[1])
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 
-@app.route('/TheRoastOfLeaves', methods=['GET', 'POST'], methods=['GET', 'POST'])
+@app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
-    drop_down = SelectHoLItemsForm()
+    drop_down = SelectHoLItemsForm(prefix='cart')
     infoList = descriptionChoice("The Roast of Leaves")
-    favorite_button = FavoriteButton()
+    favorite_button = FavoriteButton(prefix='favorite')
     if current_user.is_authenticated:
         favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "The Roast of Leaves") #index 0 is current_coffee row, index 1 is the modified favorite button
-            
+        fav_unfav_button = favorite_info[1]
+    else:
+        fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
+        
     if favorite_button.validate_on_submit():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
-    
-    
-
-    
+        
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'The Roast of Leaves':
             add_coffee_to_cart(db, 'The Roast of Leaves', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The House of Leaves':
             add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=favorite_info[1])
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
-@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'], methods=['GET', 'POST'])
+@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
+    drop_down = SelectAtMoMItemsForm(prefix='cart')
     infoList = descriptionChoice("At the Cups of Madness")
-    favorite_button = FavoriteButton()
+    favorite_button = FavoriteButton(prefix='favorite')
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "At The Cups of Madness") #index 0 is current_coffee row, index 1 is the modified favorite button
-            
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "At the Cups of Madness") #index 0 is current_coffee row, index 1 is the modified favorite button
+        fav_unfav_button = favorite_info[1]
+    else:
+        fav_unfav_button = ""   
     if favorite_button.validate_on_submit():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
-    drop_down = SelectAtHoMItemsForm()
-    infoList = descriptionChoice("At the Cups of Maddness")
+        fav_unfav_button = favorite_info[1]
+        
     user_cart = current_user.cart
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
@@ -385,46 +391,76 @@ def AtTheCupsOfMadness():
             add_coffee_to_cart(db, 'At the Cups of Madness', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'At the Mountains of Madness':
             add_book_to_cart(db, 'At the Mountains of Madness', current_user.cart, Book, CartItem, 25.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=favorite_info[1])
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
 def silver_hand_special():
-    drop_down = SelectCyberPunkItemsForm()
+    drop_down = SelectCyberPunkItemsForm(prefix='cart')
     infoList = descriptionChoice('The Silverhand Special')
     user_cart = current_user.cart
+    favorite_button = FavoriteButton(prefix='favorite')
+    if current_user.is_authenticated:
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "The Silverhand Special") #index 0 is current_coffee row, index 1 is the modified favorite button
+        fav_unfav_button = favorite_info[1]
+    else:
+        fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
+        
+    if favorite_button.validate_on_submit():
+        fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
+        
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'The Silverhand Special':
             add_coffee_to_cart(db, 'The Silverhand Special', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Cyberpunk 2077':
             add_game_to_cart(db, 'Cyberpunk 2077', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
 def western_nostalgia():
-    drop_down = SelectRDRItemsForm()
+    drop_down = SelectRDRItemsForm(prefix='cart')
     infoList = descriptionChoice('Western Nostalgia')
     user_cart = current_user.cart
+    favorite_button = FavoriteButton(prefix='favorite')
+    if current_user.is_authenticated:
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Western Nostalgia") #index 0 is current_coffee row, index 1 is the modified favorite button
+        fav_unfav_button = favorite_info[1]
+    else:
+        fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
+        
+    if favorite_button.validate_on_submit():
+        fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
+        
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Western Nostalgia':
             add_coffee_to_cart(db, 'Western Nostalgia', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Red Dead Redemption 2':
             add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
 def potion_of_energy():
-    drop_down = SelectMCItemsForm()
+    drop_down = SelectMCItemsForm(prefix='cart')
     infoList = descriptionChoice('Potion of Energy')
     user_cart = current_user.cart
+    favorite_button = FavoriteButton(prefix='favorite')
+    if current_user.is_authenticated:
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Potion of Energy") #index 0 is current_coffee row, index 1 is the modified favorite button
+        fav_unfav_button = favorite_info[1]
+    else:
+        fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
+        
+    if favorite_button.validate_on_submit():
+        fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
+        
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Potion of Energy':
             add_coffee_to_cart(db, 'Potion of Energy', current_user.cart, Coffee, CartItem, 19.99)
         if product == 'Minecraft':
             add_game_to_cart(db, 'Minecraft', current_user.cart, VideoGame, CartItem, 19.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 if __name__ == "__main__":
     app.run(debug=True)
