@@ -3,8 +3,9 @@ from flask import Flask, render_template, redirect, session, url_for
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from coffeeInfo import descriptionChoice
-from utilities import passwordCheck, add_coffee_to_cart, add_book_to_cart, add_game_to_cart
+from sqlalchemy import desc
+from coffeeInfo import descriptionChoice, popularPicks
+from utilities import passwordCheck, fav_or_unfav, favoriting_info, add_coffee_to_cart, add_book_to_cart, add_game_to_cart
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
@@ -23,6 +24,22 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 #THIS NEXT SECTION IS JUST TAKEN FROM LAB07, IT NEEDS TO BE CLEANED UP AND MOVED INTO A DIFFERENT FILE IDEALLY
+
+class Favorite(db.Model):
+    __tablename__="Favorite"
+    
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False) 
+    coffee_id = db.Column(db.Integer, db.ForeignKey('Coffee.id'), nullable=False)
+    #many to many relationship between user and coffee
+    def __init__(self, user_id, coffee_id):
+        self. user_id = user_id
+        self. coffee_id = coffee_id
+
+        
+    def __repr__(self):
+        return f"ID: {self.id} user_id: {self.user_id} coffee_id: {self.coffee_id}"
+    
 class User(UserMixin, db.Model):
     __tablename__="Users"
     
@@ -31,6 +48,7 @@ class User(UserMixin, db.Model):
     lastName = db.Column(db.Text)
     password = db.Column(db.Text)
     email = db.Column(db.Text, unique = True)
+    coffees = db.relationship('Coffee', secondary=Favorite.__table__, backref='Users')
     cart = db.relationship('Cart', backref='user', uselist=False, lazy=True) 
     """
     line 34 creates a relationship between the user and the cart, backref='user' essentially creates a user attribute for the cart which lets a cart object access
@@ -69,7 +87,16 @@ class Coffee(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     coffeeName = db.Column(db.Text, nullable = False)
     favCount = db.Column(db.Integer)
+    users = db.relationship('User', secondary=Favorite.__table__, backref='Coffee')
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
+    
+    def __init__(self, coffeeName, favCount, price):
+        self.coffeeName =coffeeName
+        self.favCount = favCount
+        self.price = price
+    
+    def __repr__(self):
+        return f"ID: {self.id} Name: {self.coffeeName} Fav: {self.favCount} Price: {self.price} "
 
 class Book(db.Model):
     __tablename__="Book"
@@ -98,8 +125,6 @@ class Cart(db.Model):
     """
     cart and the product models are linked by a table callted CartItems
     """
-
-    
 
 with app.app_context():
     db.create_all()
@@ -137,6 +162,9 @@ class SignUpForm(FlaskForm):
     firstName = StringField('First Name:', validators = [InputRequired()])
     lastName = StringField('Last Name:', validators = [InputRequired()])
 
+class FavoriteButton(FlaskForm):
+    submit = SubmitField('Favorite')
+    
 """Lord of the Rings"""
 class SelectLotrItemsForm(FlaskForm):
     product_choice = SelectField(choices=['Second Breakfast', 'The Lord of the Rings'])
@@ -171,7 +199,11 @@ def get_user(user_id):
 #Renders the home page
 @app.route('/')
 def index():
-    return render_template('index.html')
+    favorites = Coffee.query.order_by(desc(Coffee.favCount)).all()
+    popular1 = popularPicks(favorites[0].coffeeName)
+    popular2 = popularPicks(favorites[1].coffeeName)
+    popular3 = popularPicks(favorites[2].coffeeName)
+    return render_template('index.html', popular1=popular1, popular2=popular2, popular3=popular3)
 
 
 #Sign In
@@ -295,33 +327,55 @@ def CoffeeList():
 
 #I hate the function I made to clean this up. Is there a better way?
 #descriptionChoice located in coffeeInfo.py
-@app.route('/SecondBreakfast', methods=['GET', 'POST'])
+@app.route('/SecondBreakfast', methods=['GET', 'POST'], methods=['GET', 'POST'])
 def SecondBreakfast():
     drop_down = SelectLotrItemsForm()
     infoList = descriptionChoice("Second Breakfast")
+    favorite_button = FavoriteButton()
+    if current_user.is_authenticated:
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Second Breakfast") #index 0 is current_coffee row, index 1 is the modified favorite button
+    if favorite_button.validate_on_submit():
+        fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Second Breakfast':
             add_coffee_to_cart(db, 'Second Breakfast', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The Lord of the Rings':
             add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=favorite_info[1])
 
 
-@app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
+@app.route('/TheRoastOfLeaves', methods=['GET', 'POST'], methods=['GET', 'POST'])
 def TheRoastOfLeaves():
     drop_down = SelectHoLItemsForm()
     infoList = descriptionChoice("The Roast of Leaves")
+    favorite_button = FavoriteButton()
+    if current_user.is_authenticated:
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "The Roast of Leaves") #index 0 is current_coffee row, index 1 is the modified favorite button
+            
+    if favorite_button.validate_on_submit():
+        fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
+    
+    
+
+    
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'The Roast of Leaves':
             add_coffee_to_cart(db, 'The Roast of Leaves', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The House of Leaves':
             add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=favorite_info[1])
 
-@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
+@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'], methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
+    infoList = descriptionChoice("At the Cups of Madness")
+    favorite_button = FavoriteButton()
+    if current_user.is_authenticated:
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "At The Cups of Madness") #index 0 is current_coffee row, index 1 is the modified favorite button
+            
+    if favorite_button.validate_on_submit():
+        fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
     drop_down = SelectAtHoMItemsForm()
     infoList = descriptionChoice("At the Cups of Maddness")
     user_cart = current_user.cart
@@ -331,7 +385,7 @@ def AtTheCupsOfMadness():
             add_coffee_to_cart(db, 'At the Cups of Madness', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'At the Mountains of Madness':
             add_book_to_cart(db, 'At the Mountains of Madness', current_user.cart, Book, CartItem, 25.99)
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, fav_unfav_button=favorite_info[1])
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
 def silver_hand_special():

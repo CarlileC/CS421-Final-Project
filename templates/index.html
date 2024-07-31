@@ -19,18 +19,19 @@
     <h2>Popular Picks</h2>
     <div class="popular">
         <div class="popularCoffee">
-          <a href="{{url_for('SecondBreakfast')}}"><img src="https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg">
+          {{popular1}}
+          <!-- <a href="{{url_for('SecondBreakfast')}}"><img src="https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg">
             <p>Second Breakfast</p>
-            </a>
+            </a> -->
         </div>
         <div class="popularCoffee">
-          <a href="{{url_for('TheRoastOfLeaves')}}"><img src="https://m.media-amazon.com/images/I/51QoJuZLrlL._AC_UF1000,1000_QL80_.jpg">
+          {{popular2}}
+          <!-- <a href="{{url_for('TheRoastOfLeaves')}}"><img src="https://m.media-amazon.com/images/I/51QoJuZLrlL._AC_UF1000,1000_QL80_.jpg">
             <p>The Roast of Leaves</p>
-          </a>
+          </a> -->
         </div>
         <div class="popularCoffee">
-            <a href="{{url_for('potion_of_energy')}}"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6DKnP8m8EHbfT7f5L6ixqAvHiHQxxhFtkZg&s"></a>
-            <p>Potion of Energy</p>
+            {{popular3}}
         </div>
     </div>
     {% endblock %}
