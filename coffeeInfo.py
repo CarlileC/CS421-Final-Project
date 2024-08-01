@@ -1,7 +1,12 @@
 from markupsafe import Markup
 
 
-#I kind of hate this 
+'''
+description_choice takes in the name of a coffee and renders it's description and image appropriately
+This function is messy, but with how each coffee has a long description, drop down menu, and image, this 
+could not be avoided since these are too long to store into a database the only other option would to have
+seperate .html files for each coffee but that is also messy in its own right so we went with this
+'''
 def description_choice(name:str):
     if name == "Second Breakfast":
         coffee_image = Markup("<img src='https://m.media-amazon.com/images/I/81nV6x2ey4L._AC_UF1000,1000_QL80_.jpg'>") 

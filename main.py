@@ -225,9 +225,10 @@ class MyAdminView(AdminIndexView):
             if current_user.admin:
                 return True
 
-    def inaccessible_callback(self, name, **kwargs):
+    def inaccessible_callback(self, name, **kwargs): #any normal user that tries to access /admin immediately gets kick backed to the home page
         return redirect(url_for('index'))
 
+#admin view initialization
 admin = Admin(app, index_view=MyAdminView())
 admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Coffee, db.session))
@@ -243,8 +244,11 @@ def get_user(user_id):
 #Renders the home page
 @app.route('/')
 def index():
+    '''
+    Grabs the top 3 most popular coffee and displays them on the front page
+    '''
     favorites = Coffee.query.order_by(desc(Coffee.favCount)).all()
-    popular1 = popular_picks(favorites[0].coffee_name)
+    popular1 = popular_picks(favorites[0].coffee_name) 
     popular2 = popular_picks(favorites[1].coffee_name)
     popular3 = popular_picks(favorites[2].coffee_name)
     return render_template('index.html', popular1=popular1, popular2=popular2, popular3=popular3)
@@ -260,7 +264,7 @@ def signin():
         user = db.session.query(User).filter(User.email==email).first() #queries the database, looking if there is a combination in the database
         if user is not None: #Is there a user? If so check their password hash
             hash_check = bcrypt.check_password_hash(user.password, password) 
-            if user.admin and hash_check:
+            if user.admin and hash_check: #is this person an admin? Sign them in and take them to admin view
                 login_user(user)
                 return redirect(url_for('admin.index'))
             elif hash_check:
@@ -272,7 +276,6 @@ def signin():
     return render_template('signin.html', form=form) #User clicks on the nav bar link
 
 
-#Still a little messy
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignUpForm()
@@ -377,8 +380,7 @@ def CoffeeList():
 
 #Renders the coffee list
 
-#I hate the function I made to clean this up. Is there a better way?
-#description_choice located in coffeeInfo.py
+#description_choice located in coffeeInfo.py. favoriting_info and fav_or_unfav located in utilities.py
 @app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
     drop_down = SelectLotrItemsForm(prefix='cart')

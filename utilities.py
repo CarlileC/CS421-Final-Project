@@ -1,6 +1,10 @@
 from markupsafe import Markup
 
 
+'''
+password_check takes in both passwords the user submits and checks if 1. they match and 2. They meet the specified requirements. 
+On fail, it reloads the page and displays an error message
+'''
 def password_check(password:str, confirm_password:str) -> list:    
         upper = False
         lower = False
@@ -43,24 +47,25 @@ def password_check(password:str, confirm_password:str) -> list:
             returnMessage = Markup(message)
             return [False, returnMessage]
         
-
-def fav_or_unfav(db, favorite_button, current_coffee, current_user, Favorite, Coffee):
+'''
+fav_or_unfav takes in a database, a button object, a coffee table row, a user table row, and a Favorite table and Coffee Table
+It will check if the favorite button is labeled "Favorite" if it is it will add a new user coffee relationship to the Favorite table and increase the Coffee's favorite count.
+If the favorite_button is labeled "Unfavorite" it will remove the user coffee relationship from the Favorite table and lower the Coffee's favorite count
+'''
+def fav_or_unfav(db, favorite_button, current_coffee, current_user, Favorite, Coffee) -> None:
     if(favorite_button.submit.label.text == "Favorite"):
         new_favorite = Favorite(user_id = current_user.id, coffee_id = current_coffee.id)
         current_coffee.favCount = Coffee.favCount + 1
         db.session.add(new_favorite)
         db.session.commit()
         favorite_button.submit.label.text = "Unfavorite"      
-        print("Favorite Pressed")
-        print(current_user.Coffee)
     else:
         db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == current_coffee.id).delete()
         current_coffee.favCount = Coffee.favCount - 1
         db.session.commit()
         favorite_button.submit.label.text = "Favorite"
-        print("Unfavorite Pressed")
-        print(current_user.Coffee)
-        
+
+
 def favoriting_info(db, current_user, favorite_button, Coffee, coffee_name):
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name==coffee_name).first()
         #These two lines are changing how the favorite button is rendered on the render_template function below
