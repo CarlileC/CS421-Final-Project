@@ -17,13 +17,38 @@
       {{coffeeImage}}
     </div>
     <div class="coffeeText">
-      <p> {{coffeeDescription}}<br></p>
+      <p> {{coffeeDescription}}<br></p> 
+      <div class="comments">
+        {% for comment in user_comments_list%}
+        <div>
+          <div>{{comment.summary}}</div>
+          <div>{{comment.comment}}</div>
+        </div>
+        {% endfor %}
+      </div>
 
           <!-- Form to add items into the cart -->
           <form action="#" method="POST">
             {{ drop_down.hidden_tag() }}
             {{ drop_down.product_choice.label }} {{ drop_down.product_choice }}
             {{ drop_down.submit }}
+          </form>
+
+          <form action="#" method="POST">
+            {{ comment_form.hidden_tag() }}
+            <div>
+              {{ comment_form.summary.label }}
+            </div>
+            <div>
+              {{ comment_form.summary }}
+            </div>
+            <div>
+              {{ comment_form.comment.label }}
+            </div>
+            <div>
+              {{ comment_form.comment }}
+            </div>
+            {{ comment_form.submit }}
           </form>
 
     </div>

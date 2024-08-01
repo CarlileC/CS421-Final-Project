@@ -81,3 +81,15 @@ def order_number_generator(Order):
     while Order.query.get(new_id) is not None:
         new_id = random.randint(1, 10000000000)
     return new_id
+
+def order_number_generator(Order):
+    new_id = random.randint(1, 10000000000)
+    while Order.query.get(new_id) is not None:
+        new_id = random.randint(1, 10000000000)
+    return new_id
+
+def add_new_comment(db, summary_form_data, comment_form_data, user, coffee_id, Comment):
+    comment = Comment(summary=summary_form_data, comment=comment_form_data, coffee_id=coffee_id, user=user)
+    db.session.add(comment)
+    db.session.commit()
+    db.session.flush()
