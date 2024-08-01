@@ -55,13 +55,13 @@ If the favorite_button is labeled "Unfavorite" it will remove the user coffee re
 def fav_or_unfav(db, favorite_button, current_coffee, current_user, Favorite, Coffee) -> None:
     if(favorite_button.submit.label.text == "Favorite"):
         new_favorite = Favorite(user_id = current_user.id, coffee_id = current_coffee.id)
-        current_coffee.favCount = Coffee.favCount + 1
+        current_coffee.fav_count = Coffee.fav_count + 1
         db.session.add(new_favorite)
         db.session.commit()
         favorite_button.submit.label.text = "Unfavorite"      
     else:
         db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == current_coffee.id).delete()
-        current_coffee.favCount = Coffee.favCount - 1
+        current_coffee.fav_count = Coffee.fav_count - 1
         db.session.commit()
         favorite_button.submit.label.text = "Favorite"
 
@@ -87,7 +87,7 @@ def add_coffee_to_cart(db, coffee_name, user_cart, Coffee, CartItem, price):
         db.session.commit()
 
 def add_book_to_cart(db, book_name, user_cart, Book, CartItem, price):
-    book = Book.query.filter_by(bookName=book_name).first()
+    book = Book.query.filter_by(book_name=book_name).first()
     book_item = CartItem.query.filter_by(cart_id=user_cart.id, book_id=book.id).first()
     if book_item:
         book_item.quantity += 1
@@ -98,7 +98,7 @@ def add_book_to_cart(db, book_name, user_cart, Book, CartItem, price):
         db.session.commit()
 
 def add_game_to_cart(db, game_name, user_cart, VideoGame, CartItem, price):
-    game = VideoGame.query.filter_by(gameName=game_name).first()
+    game = VideoGame.query.filter_by(game_name=game_name).first()
     game_item = CartItem.query.filter_by(cart_id=user_cart.id, game_id=game.id).first()
     if game_item:
         game_item.quantity += 1

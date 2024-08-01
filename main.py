@@ -94,24 +94,29 @@ class Coffee(db.Model):
     
     id = db.Column(db.Integer, primary_key = True)
     coffee_name = db.Column(db.Text, nullable = False)
-    favCount = db.Column(db.Integer)
+    fav_count = db.Column(db.Integer)
     users = db.relationship('User', secondary=Favorite.__table__, backref='Coffee')
     stock = db.Column(db.Integer, nullable = False)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='coffee_items', viewonly=True)
+    description = db.Column(db.Text)
+    image = db.Column(db.Text)
     
-    def __init__(self, coffee_name, favCount, stock):
+    def __init__(self, coffee_name, fav_count, stock, description, image):
         self.coffee_name =coffee_name
-        self.favCount = favCount
+        self.fav_count = fav_count
         self.stock = stock
+        self.description = description
+        self.image = image
+        
     
     def __repr__(self):
-        return f"ID: {self.id} Name: {self.coffee_name} Fav: {self.favCount}"
+        return f"ID: {self.id} Name: {self.coffee_name} Fav: {self.fav_count}"
 
 class Book(db.Model):
     __tablename__="Book"
 
     id = db.Column(db.Integer, primary_key = True)
-    bookName = db.Column(db.Text, nullable = False)
+    book_name = db.Column(db.Text, nullable = False)
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     stock = db.Column(db.Integer, nullable = False)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
@@ -120,7 +125,7 @@ class VideoGame(db.Model):
     __tablename__="Videogame"
 
     id = db.Column(db.Integer, primary_key = True)
-    gameName = db.Column(db.Text, nullable = False)
+    game_name = db.Column(db.Text, nullable = False)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='game_items', viewonly=True)
     stock = db.Column(db.Integer, nullable = False)
 
@@ -144,18 +149,19 @@ with app.app_context():
     #The next set of lines would be not be here in a live application, this is just for project purposed to make sure the database is initialized properly
     coffee = Coffee.query.filter_by(coffee_name='Second Breakfast').first()
     if not coffee:
-        db.session.add(Coffee(coffee_name='Second Breakfast', favCount=0, stock=10))
-        db.session.add(Coffee(coffee_name='The Roast of Leaves', favCount=0, stock = 10))
-        db.session.add(Coffee(coffee_name='At the Cups of Madness', favCount=0, stock = 10))
-        db.session.add(Coffee(coffee_name='The Silverhand Special', favCount=0, stock = 10))
-        db.session.add(Coffee(coffee_name='Western Nostalgia', favCount=0, stock = 10))
-        db.session.add(Coffee(coffee_name='Potion of Energy', favCount=0, stock = 10))
-        db.session.add(Book(bookName='The Lord of the Rings', stock = 10))
-        db.session.add(Book(bookName='The House of Leaves', stock = 10))
-        db.session.add(Book(bookName='At the Mountains of Madness', stock = 10))
-        db.session.add(VideoGame(gameName='Cyberpunk 2077', stock = 10))
-        db.session.add(VideoGame(gameName='Red Dead Redemption 2', stock = 10))
-        db.session.add(VideoGame(gameName='Minecraft', stock = 10))
+        desc = description_choice("Second Breakfast")
+        db.session.add(Coffee(coffee_name='Second Breakfast', fav_count=0, stock=10, description=desc[2], image=desc[1] ))
+        db.session.add(Coffee(coffee_name='The Roast of Leaves', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        db.session.add(Coffee(coffee_name='At the Cups of Madness', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        # db.session.add(Coffee(coffee_name='The Silverhand Special', fav_count=0, stock = 10))
+        # db.session.add(Coffee(coffee_name='Western Nostalgia', fav_count=0, stock = 10))
+        # db.session.add(Coffee(coffee_name='Potion of Energy', fav_count=0, stock = 10))
+        # db.session.add(Book(book_name='The Lord of the Rings', stock = 10))
+        # db.session.add(Book(book_name='The House of Leaves', stock = 10))
+        # db.session.add(Book(book_name='At the Mountains of Madness', stock = 10))
+        # db.session.add(VideoGame(game_name='Cyberpunk 2077', stock = 10))
+        # db.session.add(VideoGame(game_name='Red Dead Redemption 2', stock = 10))
+        # db.session.add(VideoGame(game_name='Minecraft', stock = 10))
         db.session.commit()
         
     admin_login = User.query.filter_by(email="admin@coffeeshop.com").first() 
@@ -255,11 +261,11 @@ def index():
     '''
     Grabs the top 3 most popular coffee and displays them on the front page
     '''
-    favorites = Coffee.query.order_by(desc(Coffee.favCount)).all()
-    popular1 = popular_picks(favorites[0].coffee_name) 
-    popular2 = popular_picks(favorites[1].coffee_name)
-    popular3 = popular_picks(favorites[2].coffee_name)
-    return render_template('index.html', popular1=popular1, popular2=popular2, popular3=popular3)
+    favorites = Coffee.query.order_by(desc(Coffee.fav_count)).all()
+    # popular1 = popular_picks(favorites[0].coffee_name) 
+    # popular2 = popular_picks(favorites[1].coffee_name)
+    # popular3 = popular_picks(favorites[2].coffee_name)
+    return render_template('index.html')
 
 
 #Sign In
@@ -393,6 +399,7 @@ def SecondBreakfast():
     drop_down = SelectLotrItemsForm(prefix='cart')
     info_list = description_choice("Second Breakfast")
     favorite_button = FavoriteButton(prefix='favorite')
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Second Breakfast").first()
     if current_user.is_authenticated:
         favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Second Breakfast") #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
@@ -407,7 +414,7 @@ def SecondBreakfast():
             add_coffee_to_cart(db, 'Second Breakfast', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The Lord of the Rings':
             add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
-    return render_template('CoffeePage.html', coffee_name=info_list[0], coffee_image=info_list[1], coffee_description=info_list[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])

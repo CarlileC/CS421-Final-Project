@@ -34,11 +34,11 @@
           {% for item in cart_items %}
             <tr>
               {% if item.coffee_id %}
-                    <td>{{ coffee_class.query.get(item.coffee_id).coffeeName }}</td>
+                    <td>{{ coffee_class.query.get(item.coffee_id).coffee_name }}</td>
                 {% elif item.book_id %}
-                    <td>{{ book_class.query.get(item.book_id).bookName }}</td>
+                    <td>{{ book_class.query.get(item.book_id).book_name }}</td>
                 {% elif item.game_id %}
-                    <td>{{ game_class.query.get(item.game_id).gameName }}</td>
+                    <td>{{ game_class.query.get(item.game_id).game_name }}</td>
                 {% endif %}
                 <td>{{ '%0.2f'|format(item.price) }}</td>
                 <td>{{ item.quantity }}</td>
