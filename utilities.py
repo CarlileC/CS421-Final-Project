@@ -75,8 +75,8 @@ def add_game_to_cart(db, game_name, user_cart, VideoGame, CartItem, price):
         db.session.add(new_item)
         db.session.commit()
 
-def add_new_comment(db, summary_form_data, comment_form_data, user, Comment):
-    comment = Comment(summary=summary_form_data, comment=comment_form_data, user=user)
+def add_new_comment(db, summary_form_data, comment_form_data, user, coffee_id, Comment):
+    comment = Comment(summary=summary_form_data, comment=comment_form_data, coffee_id=coffee_id, user=user)
     db.session.add(comment)
     db.session.commit()
     db.session.flush()
