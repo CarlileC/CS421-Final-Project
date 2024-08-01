@@ -11,13 +11,13 @@
 <body>
   {% extends "base.html" %}
   {% block content %}
-  <h2 class="title">{{coffeeName}}</h2>
+  <h2 class="title">{{coffee_name}}</h2>
   <div class="coffeePage">
     <div class="coffeePicture">
-      {{coffeeImage}}
+      {{coffee_image}}
     </div>
     <div class="coffeeText">
-      <p> {{coffeeDescription}}<br></p>
+      <p> {{coffee_description}}<br></p>
           {% if current_user.is_authenticated %}
           <form action="#" method="post">
             {{ fav_unfav_button.hidden_tag() }}

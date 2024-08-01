@@ -1,12 +1,12 @@
 from markupsafe import Markup
 
 
-def passwordCheck(password:str, confirmPassword:str) -> list:    
+def password_check(password:str, confirm_password:str) -> list:    
         upper = False
         lower = False
         number = password[-1].isdigit()
         length = len(password) >= 8
-        passwordMatch = False
+        password_match = False
         
         for i in password:
             if i.isupper() == True:
@@ -14,15 +14,15 @@ def passwordCheck(password:str, confirmPassword:str) -> list:
             elif i.islower() == True:
                 lower = True
 
-        if password == confirmPassword:
-            passwordMatch = True
+        if password == confirm_password:
+            password_match = True
     
         message = "<p>Oh no! Looks like you had issues with your password! <br><br> Here are the requirements you failed:<p> <ul class='errorMessage'>"
         
         
         
-        if password != confirmPassword:
-            passwordMatch = False
+        if password != confirm_password:
+            password_match = False
     
         if(not upper):
             message += "<li>You did not use an upper case letter</li>"
@@ -32,7 +32,7 @@ def passwordCheck(password:str, confirmPassword:str) -> list:
             message += "<li>You did not use a number at the end</li>"
         if(not length):
             message += "<li>Your password is less than 8 characters</li>"
-        if not passwordMatch:
+        if not password_match:
             message += "<li>Your passwords did not match</li>"
         
         
@@ -62,7 +62,7 @@ def fav_or_unfav(db, favorite_button, current_coffee, current_user, Favorite, Co
         print(current_user.Coffee)
         
 def favoriting_info(db, current_user, favorite_button, Coffee, coffee_name):
-    current_coffee = db.session.query(Coffee).filter(Coffee.coffeeName==coffee_name).first()
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name==coffee_name).first()
         #These two lines are changing how the favorite button is rendered on the render_template function below
     if current_coffee not in current_user.Coffee:
         favorite_button.submit.label.text = "Favorite"
@@ -71,7 +71,7 @@ def favoriting_info(db, current_user, favorite_button, Coffee, coffee_name):
     return [current_coffee, favorite_button]
         
 def add_coffee_to_cart(db, coffee_name, user_cart, Coffee, CartItem, price):
-    coffee = Coffee.query.filter_by(coffeeName=coffee_name).first()
+    coffee = Coffee.query.filter_by(coffee_name=coffee_name).first()
     coffee_item = CartItem.query.filter_by(cart_id=user_cart.id, coffee_id=coffee.id).first()
     if coffee_item: # for quantity, check to see if an item exists already, if it does, increase the quantity
         coffee_item.quantity += 1
