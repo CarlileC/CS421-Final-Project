@@ -9,3 +9,5 @@ https://dev.to/freddiemazzilli/flask-sqlalchemy-relationships-exploring-relation
 https://www.youtube.com/watch?v=NYWEf9bZhHQ
 
 https://stackoverflow.com/questions/9778899/how-to-order-divs-by-id-in-javascript
+
+https://www.geeksforgeeks.org/password-hashing-with-bcrypt-in-flask/

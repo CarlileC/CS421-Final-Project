@@ -34,3 +34,5 @@ URLObject==2.4.3
 Werkzeug==0.14.1
 wincertstore==0.2
 WTForms==2.1
+bcrypt==4.2.0
+flask-bcrypt==1.0.1

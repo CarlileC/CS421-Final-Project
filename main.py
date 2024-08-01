@@ -13,7 +13,7 @@ from wtforms import StringField, PasswordField, SubmitField, SelectField, Hidden
 from wtforms.validators import InputRequired, EqualTo
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
-
+from flask_bcrypt import Bcrypt 
 
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -24,6 +24,7 @@ app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 db = SQLAlchemy(app)
 Migrate(app, db)
 
+bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -139,6 +140,7 @@ class Cart(db.Model):
 with app.app_context():
     db.create_all()
 
+    #The next set of lines would be not be here in a live application, this is just for project purposed to make sure the database is initialized properly
     coffee = Coffee.query.filter_by(coffeeName='Second Breakfast').first()
     if not coffee:
         db.session.add(Coffee(coffeeName='Second Breakfast', favCount=0, stock=10))
@@ -154,9 +156,11 @@ with app.app_context():
         db.session.add(VideoGame(gameName='Red Dead Redemption 2', stock = 10))
         db.session.add(VideoGame(gameName='Minecraft', stock = 10))
         db.session.commit()
-    admin_login = User.query.filter_by(email="admin@coffeeshop.com", password = "admin").first() #the unsecured router classic
+        
+    admin_login = User.query.filter_by(email="admin@coffeeshop.com").first() 
     if not admin_login:
-        db.session.add(User(firstName="admin", lastName="admin", password="admin", email="admin@coffeeshop.com", admin=True))
+        hashed_admin = bcrypt.generate_password_hash("admin").decode('utf-8') 
+        db.session.add(User(firstName="admin", lastName="admin", password=hashed_admin, email="admin@coffeeshop.com", admin=True))
         db.session.commit()
 
 
@@ -253,13 +257,15 @@ def signin():
     if form.validate_on_submit(): #User submits the form
         email = form.email.data
         password = form.password.data
-        user = db.session.query(User).filter(User.email==email, User.password==password).first() #queries the database, looking if there is a combination in the database
-        if user is not None: #Is there a user? If so log them in
-            if user.admin:
+        user = db.session.query(User).filter(User.email==email).first() #queries the database, looking if there is a combination in the database
+        if user is not None: #Is there a user? If so check their password hash
+            hash_check = bcrypt.check_password_hash(user.password, password) 
+            if user.admin and hash_check:
                 login_user(user)
                 return redirect(url_for('admin.index'))
-            login_user(user)
-            return redirect(url_for('secretpage'))
+            elif hash_check:
+                login_user(user)
+                return redirect(url_for('secretpage'))
         else: #No? Let them try again and give them an error
             return render_template('signin.html', errorMessage=Markup("<h2>Incorrect username or password"), form=form)
 
@@ -281,7 +287,8 @@ def signup():
         
         if passwordInfo[0]: #password met requirements!
             try:
-                newUser = User(firstName=firstName, lastName=lastName, password=password, email=email, admin=False)
+                password_hash = bcrypt.generate_password_hash(password).decode('utf-8') 
+                newUser = User(firstName=firstName, lastName=lastName, password=password_hash, email=email, admin=False)
                 db.session.add(newUser)
                 db.session.flush()  # Ensure the user ID is available
                 
@@ -317,7 +324,8 @@ def cart():
         coffee_class = Coffee
         book_class = Book
         game_class = VideoGame
-        cart_items = CartItem.query.filter_by(cart_id=current_user.id)
+        cart_items = CartItem.query.filter_by(cart_id=current_user.id).all()
+        print(cart_items)
         total = 0
         for item in cart_items:
             total = total + item.quantity * item.price
