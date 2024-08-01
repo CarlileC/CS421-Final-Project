@@ -1,12 +1,12 @@
 
 function sort(){
-    var mylist = document.getElementById('main');
-    var divs = mylist.getElementsByTagName('div');
-    var listitems = [];
-    for (i = 0; i < divs.length; i++) {
-        listitems.push(divs.item(i));
+    var parentDiv = document.getElementById('main');
+    var itemDivs = parentDiv.getElementsByTagName('div');
+    var returnItems = [];
+    for (i = 0; i < itemDivs.length; i++) {
+        returnItems.push(itemDivs.item(i));
     }
-    listitems.sort(function(a, b) {
+    returnItems.sort(function(a, b) {
         var compA = a.getAttribute('id').toUpperCase();
         var compB = b.getAttribute('id').toUpperCase();
         return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
@@ -14,7 +14,7 @@ function sort(){
 
     document.getElementById("bookLabel").innerHTML = "";
     document.getElementById("gameLabel").innerHTML = "";
-    for (i = 0; i < listitems.length; i++) {
-        mylist.appendChild(listitems[i]);
+    for (i = 0; i < returnItems.length; i++) {
+        parentDiv.appendChild(returnItems[i]);
     }
 }

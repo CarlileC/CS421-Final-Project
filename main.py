@@ -87,7 +87,8 @@ class CartItem(db.Model):
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'))
     quantity = db.Column(db.Integer, default = 1)
     price = db.Column(db.Integer)
-
+    
+    
 class Coffee(db.Model):
     __tablename__="Coffee"
     
@@ -160,7 +161,14 @@ with app.app_context():
     admin_login = User.query.filter_by(email="admin@coffeeshop.com").first() 
     if not admin_login:
         hashed_admin = bcrypt.generate_password_hash("admin").decode('utf-8') 
-        db.session.add(User(first_name="admin", last_name="admin", password=hashed_admin, email="admin@coffeeshop.com", admin=True))
+        new_admin = User(first_name="admin", last_name="admin", password=hashed_admin, email="admin@coffeeshop.com", admin=True)
+        db.session.add(new_admin)
+        db.session.commit()
+         # Create a cart for the new user
+        newCart = Cart(user_id=new_admin.id)
+        db.session.add(newCart)
+                
+        # Commit the transaction
         db.session.commit()
 
 
@@ -328,7 +336,6 @@ def cart():
         book_class = Book
         game_class = VideoGame
         cart_items = CartItem.query.filter_by(cart_id=current_user.id).all()
-        print(cart_items)
         total = 0
         for item in cart_items:
             total = total + item.quantity * item.price
