@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, session, url_for
+from flask import Flask, render_template, redirect, url_for
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
@@ -209,7 +209,7 @@ def signin():
         user = db.session.query(User).filter(User.email==email, User.password==password).first() #queries the database, looking if there is a combination in the database
         if user is not None: #Is there a user? If so log them in
             login_user(user)
-            return redirect(url_for('secretpage'))
+            return redirect(url_for('CoffeeList'))
         else: #No? Let them try again and give them an error
             return render_template('signin.html', errorMessage=Markup("<h2>Incorrect username or password"), form=form)
 
@@ -370,7 +370,7 @@ def SecondBreakfast():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', user=user, coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 
@@ -388,7 +388,7 @@ def TheRoastOfLeaves():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 @app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
@@ -405,7 +405,7 @@ def AtTheCupsOfMadness():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
@@ -422,7 +422,7 @@ def silver_hand_special():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
@@ -439,7 +439,7 @@ def western_nostalgia():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
@@ -456,7 +456,7 @@ def potion_of_energy():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 if __name__ == "__main__":
