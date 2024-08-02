@@ -146,6 +146,8 @@ class Cart(db.Model):
     """
     cart and the product models are linked by a table called CartItems
     """
+    def __repr__(self):
+        return f"cart_id: {self.id} user_id: {self.user_id}"
 
 class Order(db.Model):
     __tablename__="orders"
@@ -281,6 +283,8 @@ admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Coffee, db.session))
 admin.add_view(MyModelView(VideoGame, db.session))
 admin.add_view(MyModelView(Book, db.session))
+admin.add_view(MyModelView(Order, db.session))
+admin.add_view(MyModelView(Comment, db.session))
 
 
 
@@ -441,8 +445,8 @@ def checkout():
     coffee_class = Coffee
     book_class = Book
     game_class = VideoGame
-    new_order = Order()
     cart_id = current_user.id
+    new_order = Order(order_number=order_number_generator(Order), cart_id=cart_id)
     cart_items = CartItem.query.filter_by(cart_id=current_user.id)
     error_message = None
     for item in cart_items:
@@ -465,6 +469,7 @@ def checkout():
     db.session.flush()
     if new_order.order_number == None or not cart_items:
         new_order.order_number = order_number_generator(Order)
+        print(new_order.order_number)
         db.session.commit()
     order_number = new_order.order_number
     cart_items = CartItem.query.filter_by(cart_id=current_user.id)
