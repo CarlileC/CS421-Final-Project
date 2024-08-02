@@ -78,14 +78,7 @@ def add_game_to_cart(db, game_name, user_cart, VideoGame, CartItem, price):
 
 def order_number_generator(Order):
     new_id = random.randint(1, 10000000000)
-    while Order.query.get(new_id) is not None:
-        new_id = random.randint(1, 10000000000)
-    return new_id
-
-def order_number_generator(Order):
-    new_id = random.randint(1, 10000000000)
-    while Order.query.get(new_id) is not None:
-        new_id = random.randint(1, 10000000000)
+    Order.order_number = new_id
     return new_id
 
 def add_new_comment(db, summary_form_data, comment_form_data, user, coffee_id, Comment):

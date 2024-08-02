@@ -181,7 +181,7 @@ class SelectRDRItemsForm(FlaskForm):
     submit = SubmitField('Add to Cart')
 
 class SelectMCItemsForm(FlaskForm):
-    product_choice = SelectField(choices=['Potion of Energy', 'Minecraft'])
+    product_choice = SelectField(choices=[('Potion of Energy','Potion of Energy'), ('Minecraft','Minecraft')])
     submit = SubmitField('Add to Cart')
 
 class CreateCommentForm(FlaskForm):
@@ -312,17 +312,40 @@ def delete_game(game_id):
         db.session.commit()
     return redirect(url_for('cart'))
 
+@app.route("/delete-cart-items", methods=['POST'])
+def delete_cart_items():
+    cart_items = CartItem.query.filter_by(cart_id=current_user.id).all()
+    for item in cart_items:
+        db.session.delete(item)
+    db.session.commit()
+    return(redirect(url_for('CoffeeList')))
+
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
+    coffee_class = Coffee
+    book_class = Book
+    game_class = VideoGame
     new_order = Order()
+    cart_id = current_user.id
+    cart_items = CartItem.query.filter_by(cart_id=current_user.id)
     db.session.add(new_order)
     db.session.commit()
     db.session.flush()
-    if new_order.order_number == None:
+    if new_order.order_number == None or not cart_items:
         new_order.order_number = order_number_generator(Order)
         db.session.commit()
     order_number = new_order.order_number
-    return render_template('checkout.html', order_number=order_number)
+    cart_items = CartItem.query.filter_by(cart_id=current_user.id)
+    total = 0
+    for item in cart_items:
+            total = total + item.quantity * item.price
+    return render_template('checkout.html',  total=total, 
+                           order_number=order_number, 
+                           cart_items=cart_items, 
+                           coffee_class=coffee_class, 
+                           book_class=book_class, 
+                           game_class=game_class,
+                           cart_id=cart_id)
 
 @app.route('/CoffeeList')
 def CoffeeList():
@@ -337,6 +360,7 @@ def SecondBreakfast():
     drop_down = SelectLotrItemsForm()
     infoList = descriptionChoice("Second Breakfast")
     coffee_id = Coffee.query.filter_by(coffeeName='Second Breakfast').first().id
+    user = current_user
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'Second Breakfast':
@@ -347,7 +371,7 @@ def SecondBreakfast():
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
+    return render_template('CoffeePage.html', user=user, coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
@@ -412,7 +436,11 @@ def western_nostalgia():
             add_coffee_to_cart(db, 'Western Nostalgia', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Red Dead Redemption 2':
             add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down)
+    comment_form = CreateCommentForm()
+    if comment_form.validate_on_submit():
+        add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
+    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    return render_template('CoffeePage.html', coffeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
 def potion_of_energy():
