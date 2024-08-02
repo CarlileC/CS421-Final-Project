@@ -1,11 +1,11 @@
 import os
-from flask import Flask, render_template, redirect, session, url_for
+from flask import Flask, render_template, redirect, url_for
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
 from coffeeInfo import descriptionChoice, popularPicks
-from utilities import passwordCheck, fav_or_unfav, favoriting_info, add_coffee_to_cart, add_book_to_cart, add_game_to_cart, add_new_comment
+from utilities import passwordCheck, fav_or_unfav, favoriting_info, add_coffee_to_cart, add_book_to_cart, add_game_to_cart, add_new_comment, order_number_generator
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
@@ -80,7 +80,7 @@ class CartItem(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('Videogame.id'))
     cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'))
     quantity = db.Column(db.Integer, default = 1)
-    price = db.Column(db.Integer)
+    price = db.Column(db.Float)
 
 class Coffee(db.Model):
     __tablename__="Coffee"
@@ -104,7 +104,6 @@ class Book(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     bookName = db.Column(db.Text, nullable = False)
-    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'), nullable=True)
     carts = db.relationship('Cart', secondary=CartItem.__table__, back_populates='book_items', viewonly=True)
 
 class VideoGame(db.Model):
@@ -122,10 +121,19 @@ class Cart(db.Model):
     coffee_items = db.relationship('Coffee', secondary=CartItem.__table__, back_populates="carts", viewonly=True, lazy=True) 
     book_items = db.relationship('Book', secondary=CartItem.__table__, back_populates='carts', viewonly=True, lazy=True)
     game_items = db.relationship('VideoGame', secondary=CartItem.__table__, back_populates='carts', viewonly=True, lazy=True)
+    orders = db.relationship('Order', back_populates='cart')
 
     """
-    cart and the product models are linked by a table callted CartItems
-    """  
+    cart and the product models are linked by a table called CartItems
+    """
+
+class Order(db.Model):
+    __tablename__="orders"
+
+    id = db.Column(db.Integer, primary_key = True)
+    order_number = db.Column(db.Integer, default=None)
+    cart_id = db.Column(db.Integer, db.ForeignKey('Cart.id'))
+    cart = db.relationship('Cart', back_populates='orders')
 
 class Comment(db.Model):
     __tablename__='Comments'
@@ -238,7 +246,7 @@ def signin():
         user = db.session.query(User).filter(User.email==email, User.password==password).first() #queries the database, looking if there is a combination in the database
         if user is not None: #Is there a user? If so log them in
             login_user(user)
-            return redirect(url_for('secretpage'))
+            return redirect(url_for('CoffeeList'))
         else: #No? Let them try again and give them an error
             return render_template('signin.html', errorMessage=Markup("<h2>Incorrect username or password"), form=form)
 
@@ -341,6 +349,41 @@ def delete_game(game_id):
         db.session.commit()
     return redirect(url_for('cart'))
 
+@app.route("/delete-cart-items", methods=['POST'])
+def delete_cart_items():
+    cart_items = CartItem.query.filter_by(cart_id=current_user.id).all()
+    for item in cart_items:
+        db.session.delete(item)
+    db.session.commit()
+    return(redirect(url_for('CoffeeList')))
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    coffee_class = Coffee
+    book_class = Book
+    game_class = VideoGame
+    new_order = Order()
+    cart_id = current_user.id
+    cart_items = CartItem.query.filter_by(cart_id=current_user.id)
+    db.session.add(new_order)
+    db.session.commit()
+    db.session.flush()
+    if new_order.order_number == None or not cart_items:
+        new_order.order_number = order_number_generator(Order)
+        db.session.commit()
+    order_number = new_order.order_number
+    cart_items = CartItem.query.filter_by(cart_id=current_user.id)
+    total = 0
+    for item in cart_items:
+            total = total + item.quantity * item.price
+    return render_template('checkout.html',  total=total, 
+                           order_number=order_number, 
+                           cart_items=cart_items, 
+                           coffee_class=coffee_class, 
+                           book_class=book_class, 
+                           game_class=game_class,
+                           cart_id=cart_id)
+
 @app.route('/CoffeeList')
 def CoffeeList():
     return render_template('CoffeeList.html')
@@ -354,6 +397,7 @@ def SecondBreakfast():
     drop_down = SelectLotrItemsForm(prefix='cart')
     infoList = descriptionChoice("Second Breakfast")
     coffee_id = Coffee.query.filter_by(coffeeName='Second Breakfast').first().id
+    user = current_user
     favorite_button = FavoriteButton(prefix='favorite')
     if current_user.is_authenticated:
         favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Second Breakfast") #index 0 is current_coffee row, index 1 is the modified favorite button
@@ -371,8 +415,8 @@ def SecondBreakfast():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
-    return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
+    return render_template('CoffeePage.html', user=user, coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
@@ -399,7 +443,7 @@ def TheRoastOfLeaves():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
 
 @app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
@@ -426,7 +470,7 @@ def AtTheCupsOfMadness():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
@@ -453,7 +497,7 @@ def silver_hand_special():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
@@ -480,7 +524,7 @@ def western_nostalgia():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
@@ -507,7 +551,7 @@ def potion_of_energy():
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
-    user_comments_list = list(Comment.query.filter_by(coffee_id=coffee_id))
+    user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffeeName=infoList[0], coffeeImage=infoList[1], coffeeDescription=infoList[2], drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button)
 
 if __name__ == "__main__":
