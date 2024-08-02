@@ -9,7 +9,7 @@ function sort(){
     returnItems.sort(function(a, b) {
         var compA = a.getAttribute('id').toUpperCase(); //Sorting logic breaks on uppercase vs lower case
         var compB = b.getAttribute('id').toUpperCase();
-        return (compA < compB) ? -1 : (compA > compB) ? 1 : 0; //JavaScript's sort function is weird, had to come up with my own logic but its the same as any other sort()
+        return (compA < compB) ? -1 : (compA > compB) ? 1 : 0; //JavaScript's sort function is weird and wouldn't sort properly, this is similar logic
     });
 
     document.getElementById("bookLabel").innerHTML = ""; //This hides the labels when sorting by theme

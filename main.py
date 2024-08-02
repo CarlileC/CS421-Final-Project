@@ -524,6 +524,8 @@ def SecondBreakfast():
             add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', user=user, coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
@@ -554,6 +556,8 @@ def TheRoastOfLeaves():
             add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
@@ -583,6 +587,8 @@ def MercersBlend():
             add_book_to_cart(db, 'Do Androids Dream of Electric Sheep?', current_user.cart, Book, CartItem, 25.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
@@ -613,6 +619,8 @@ def silver_hand_special():
             add_game_to_cart(db, 'Cyberpunk 2077', current_user.cart, VideoGame, CartItem, 59.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
@@ -643,6 +651,8 @@ def western_nostalgia():
             add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
@@ -673,6 +683,8 @@ def potion_of_energy():
             add_game_to_cart(db, 'Minecraft', current_user.cart, VideoGame, CartItem, 19.99)
     comment_form = CreateCommentForm()
     if comment_form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         add_new_comment(db, comment_form.summary.data, comment_form.comment.data, current_user, coffee_id, Comment)
     user_comments_list = Comment.query.filter_by(coffee_id=coffee_id).all()
     return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, comment_form=comment_form, user_comments_list=user_comments_list, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
