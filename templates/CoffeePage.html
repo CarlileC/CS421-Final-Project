@@ -18,14 +18,6 @@
     </div>
     <div class="coffeeText">
       <p> {{coffeeDescription}}<br></p> 
-      <div class="comments">
-        {% for comment in user_comments_list%}
-        <div>
-          <div>{{comment.summary}}</div>
-          <div>{{comment.comment}}</div>
-        </div>
-        {% endfor %}
-      </div>
 
           <!-- Form to add items into the cart -->
           <form action="#" method="POST">
@@ -52,6 +44,15 @@
           </form>
 
     </div>
+  </div>
+  <h2 class="title">Comments</h2>
+  <div class="comments">
+    {% for comment in user_comments_list%}
+    <div>
+      <div>{{comment.summary}}</div>
+      <div>{{comment.comment}}</div>
+    </div>
+    {% endfor %}
   </div>
   {% endblock %}
 </body>

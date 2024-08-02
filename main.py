@@ -404,6 +404,9 @@ def potion_of_energy():
     infoList = descriptionChoice('Potion of Energy')
     coffee_id = Coffee.query.filter_by(coffeeName='Potion of Energy').first().id
     if drop_down.validate_on_submit():
+        print(current_user.is_authenticated)
+        if not current_user.is_authenticated:
+            redirect(url_for('signin'))
         product = drop_down.product_choice.data
         if product == 'Potion of Energy':
             add_coffee_to_cart(db, 'Potion of Energy', current_user.cart, Coffee, CartItem, 19.99)
