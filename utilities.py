@@ -66,8 +66,7 @@ def fav_or_unfav(db, favorite_button, current_coffee, current_user, Favorite, Co
         favorite_button.submit.label.text = "Favorite"
 
 
-def favoriting_info(db, current_user, favorite_button, Coffee, coffee_name):
-    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name==coffee_name).first()
+def favoriting_info(db, current_user, favorite_button, current_coffee):
         #These two lines are changing how the favorite button is rendered on the render_template function below
     if current_coffee not in current_user.Coffee:
         favorite_button.submit.label.text = "Favorite"

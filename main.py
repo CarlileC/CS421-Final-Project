@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, session, url_for, jsonify
+from flask import Flask, render_template, redirect, session, url_for, request
 from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
@@ -20,7 +20,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'data.sqlite')
 app.config['SQL_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = "TEMP KEY"
-app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
+app.config['FLASK_ADMIN_SWATCH'] = 'slate'
 db = SQLAlchemy(app)
 Migrate(app, db)
 
@@ -151,17 +151,22 @@ with app.app_context():
     if not coffee:
         desc = description_choice("Second Breakfast")
         db.session.add(Coffee(coffee_name='Second Breakfast', fav_count=0, stock=10, description=desc[2], image=desc[1] ))
+        desc = description_choice("The Roast of Leaves")
         db.session.add(Coffee(coffee_name='The Roast of Leaves', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        desc = description_choice("At the Cups of Madness")
         db.session.add(Coffee(coffee_name='At the Cups of Madness', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
-        # db.session.add(Coffee(coffee_name='The Silverhand Special', fav_count=0, stock = 10))
-        # db.session.add(Coffee(coffee_name='Western Nostalgia', fav_count=0, stock = 10))
-        # db.session.add(Coffee(coffee_name='Potion of Energy', fav_count=0, stock = 10))
-        # db.session.add(Book(book_name='The Lord of the Rings', stock = 10))
-        # db.session.add(Book(book_name='The House of Leaves', stock = 10))
-        # db.session.add(Book(book_name='At the Mountains of Madness', stock = 10))
-        # db.session.add(VideoGame(game_name='Cyberpunk 2077', stock = 10))
-        # db.session.add(VideoGame(game_name='Red Dead Redemption 2', stock = 10))
-        # db.session.add(VideoGame(game_name='Minecraft', stock = 10))
+        desc = description_choice("The Silverhand Special")
+        db.session.add(Coffee(coffee_name='The Silverhand Special', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        desc = description_choice("Western Nostalgia")
+        db.session.add(Coffee(coffee_name='Western Nostalgia', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        desc = description_choice("Potion of Energy")
+        db.session.add(Coffee(coffee_name='Potion of Energy', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        db.session.add(Book(book_name='The Lord of the Rings', stock = 10))
+        db.session.add(Book(book_name='The House of Leaves', stock = 10))
+        db.session.add(Book(book_name='At the Mountains of Madness', stock = 10))
+        db.session.add(VideoGame(game_name='Cyberpunk 2077', stock = 10))
+        db.session.add(VideoGame(game_name='Red Dead Redemption 2', stock = 10))
+        db.session.add(VideoGame(game_name='Minecraft', stock = 10))
         db.session.commit()
         
     admin_login = User.query.filter_by(email="admin@coffeeshop.com").first() 
@@ -192,6 +197,7 @@ class SignUpForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password:', validators=[InputRequired(), EqualTo('password', message='Passwords must be the same')])
     first_name = StringField('First Name:', validators = [InputRequired()])
     last_name = StringField('Last Name:', validators = [InputRequired()])
+    submit = SubmitField('Sign Up')
 
 class FavoriteButton(FlaskForm):
     field1 = HiddenField('Favorite Button')
@@ -262,10 +268,10 @@ def index():
     Grabs the top 3 most popular coffee and displays them on the front page
     '''
     favorites = Coffee.query.order_by(desc(Coffee.fav_count)).all()
-    # popular1 = popular_picks(favorites[0].coffee_name) 
-    # popular2 = popular_picks(favorites[1].coffee_name)
-    # popular3 = popular_picks(favorites[2].coffee_name)
-    return render_template('index.html')
+    popular1 = popular_picks(favorites[0].coffee_name) 
+    popular2 = popular_picks(favorites[1].coffee_name)
+    popular3 = popular_picks(favorites[2].coffee_name)
+    return render_template('index.html', popular1=popular1, popular2=popular2, popular3=popular3)
 
 
 #Sign In
@@ -284,10 +290,11 @@ def signin():
             elif hash_check:
                 login_user(user)
                 return redirect(url_for('secretpage'))
-        else: #No? Let them try again and give them an error
-            return render_template('signin.html', error_message=Markup("<h2>Incorrect username or password"), form=form)
-
-    return render_template('signin.html', form=form) #User clicks on the nav bar link
+    elif request.method == 'GET':
+        print("navbar")
+        return render_template('signin.html', form=form) #User clicks navbar link
+    print("incorrect")
+    return render_template('signin.html', error_message=Markup("<h2>Incorrect username or password"), form=form) #wrong username or password
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -301,7 +308,7 @@ def signup():
         confirm_password:str = form.confirm_password.data
         
         password_info:list = password_check(password, confirm_password) #located in utilities, checks if password meets requirements
-        
+        print(password_info)
         if password_info[0]: #password met requirements!
             try:
                 password_hash = bcrypt.generate_password_hash(password).decode('utf-8') 
@@ -317,11 +324,15 @@ def signup():
                 db.session.commit()
                 return redirect(url_for('signin', error_message="Thank you, please sign in")) #redirects them to the sign in page, letting them know it worked
             except IntegrityError:
-                return render_template('signup.html', error_message=Markup("<h3 class='error_message'>Email already in database</h3>")) #email in database, try again
+                print("email error")
+                return render_template('signup.html', form=form, error_message=Markup("<h3 class='error_message'>Email already in database</h3>")) #email in database, try again
         else: #password failed, error message located in second element of list.
-            return render_template('signup.html', error_message=password_info[1])
+            print(f"form error {password_info}")
+            return render_template('signup.html', form=form, error_message=password_info[1])
+    elif request.method == 'GET':
+        return render_template('signup.html', form=form)
         
-    return render_template("signup.html", form=form) #User clicks on the nav bar link
+    return render_template('signup.html', form=form, error_message=Markup("<h3 class='error_message'>Passwords did not match!</h3>"))
 
 #A fun reference, should be removed later
 @app.route('/secretpage', methods=['GET', 'POST'])
@@ -393,15 +404,14 @@ def CoffeeList():
 
 #Renders the coffee list
 
-#description_choice located in coffeeInfo.py. favoriting_info and fav_or_unfav located in utilities.py
+#favoriting_info and fav_or_unfav located in utilities.py
 @app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
     drop_down = SelectLotrItemsForm(prefix='cart')
-    info_list = description_choice("Second Breakfast")
     favorite_button = FavoriteButton(prefix='favorite')
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Second Breakfast").first()
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Second Breakfast") #index 0 is current_coffee row, index 1 is the modified favorite button
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
     else:
         fav_unfav_button = ""
@@ -420,10 +430,10 @@ def SecondBreakfast():
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
     drop_down = SelectHoLItemsForm(prefix='cart')
-    info_list = description_choice("The Roast of Leaves")
     favorite_button = FavoriteButton(prefix='favorite')
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="The Roast of Leaves").first()
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "The Roast of Leaves") #index 0 is current_coffee row, index 1 is the modified favorite button
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
     else:
         fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
@@ -437,15 +447,15 @@ def TheRoastOfLeaves():
             add_coffee_to_cart(db, 'The Roast of Leaves', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The House of Leaves':
             add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
-    return render_template('CoffeePage.html', coffee_name=info_list[0], coffee_image=info_list[1], coffee_description=info_list[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
 def AtTheCupsOfMadness():
     drop_down = SelectAtMoMItemsForm(prefix='cart')
-    info_list = description_choice("At the Cups of Madness")
     favorite_button = FavoriteButton(prefix='favorite')
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="At the Cups of Madness").first()
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "At the Cups of Madness") #index 0 is current_coffee row, index 1 is the modified favorite button
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
     else:
         fav_unfav_button = ""   
@@ -453,23 +463,21 @@ def AtTheCupsOfMadness():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         fav_unfav_button = favorite_info[1]
         
-    user_cart = current_user.cart
     if drop_down.validate_on_submit():
         product = drop_down.product_choice.data
         if product == 'At the Cups of Madness':
             add_coffee_to_cart(db, 'At the Cups of Madness', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'At the Mountains of Madness':
             add_book_to_cart(db, 'At the Mountains of Madness', current_user.cart, Book, CartItem, 25.99)
-    return render_template('CoffeePage.html', coffee_name=info_list[0], coffee_image=info_list[1], coffee_description=info_list[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
 def silver_hand_special():
     drop_down = SelectCyberPunkItemsForm(prefix='cart')
-    info_list = description_choice('The Silverhand Special')
-    user_cart = current_user.cart
     favorite_button = FavoriteButton(prefix='favorite')
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="The Silverhand Special").first()
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "The Silverhand Special") #index 0 is current_coffee row, index 1 is the modified favorite button
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
     else:
         fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
@@ -483,16 +491,15 @@ def silver_hand_special():
             add_coffee_to_cart(db, 'The Silverhand Special', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Cyberpunk 2077':
             add_game_to_cart(db, 'Cyberpunk 2077', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffee_name=info_list[0], coffee_image=info_list[1], coffee_description=info_list[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
 def western_nostalgia():
     drop_down = SelectRDRItemsForm(prefix='cart')
-    info_list = description_choice('Western Nostalgia')
-    user_cart = current_user.cart
     favorite_button = FavoriteButton(prefix='favorite')
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Western Nostalgia").first()
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Western Nostalgia") #index 0 is current_coffee row, index 1 is the modified favorite button
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
     else:
         fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
@@ -506,16 +513,15 @@ def western_nostalgia():
             add_coffee_to_cart(db, 'Western Nostalgia', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Red Dead Redemption 2':
             add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffee_name=info_list[0], coffee_image=info_list[1], coffee_description=info_list[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
 def potion_of_energy():
     drop_down = SelectMCItemsForm(prefix='cart')
-    info_list = description_choice('Potion of Energy')
-    user_cart = current_user.cart
     favorite_button = FavoriteButton(prefix='favorite')
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Potion of Energy").first()
     if current_user.is_authenticated:
-        favorite_info:list = favoriting_info(db, current_user, favorite_button, Coffee, "Potion of Energy") #index 0 is current_coffee row, index 1 is the modified favorite button
+        favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
     else:
         fav_unfav_button = "" #If the user is not logged in, it will throw a index out of bounds error
@@ -529,7 +535,7 @@ def potion_of_energy():
             add_coffee_to_cart(db, 'Potion of Energy', current_user.cart, Coffee, CartItem, 19.99)
         if product == 'Minecraft':
             add_game_to_cart(db, 'Minecraft', current_user.cart, VideoGame, CartItem, 19.99)
-    return render_template('CoffeePage.html', coffee_name=info_list[0], coffee_image=info_list[1], coffee_description=info_list[2], drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
 
 if __name__ == "__main__":
     app.run(debug=True)
