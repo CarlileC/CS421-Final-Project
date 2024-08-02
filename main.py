@@ -88,6 +88,9 @@ class CartItem(db.Model):
     quantity = db.Column(db.Integer, default = 1)
     price = db.Column(db.Float)
     
+    def __repr__(self):
+        print(f"id: {self.id}, coffee_id {self.coffee_id}, book_id {self.book_id}, game_id {self.game_id}")
+    
     
 class Coffee(db.Model):
     __tablename__="Coffee"
@@ -441,6 +444,22 @@ def checkout():
     new_order = Order()
     cart_id = current_user.id
     cart_items = CartItem.query.filter_by(cart_id=current_user.id)
+    error_message = None
+    for item in cart_items:
+        if item.coffee_id is not None and Coffee.query.filter_by(id=item.coffee_id).first().stock <= 0:
+            error_message = f"{Coffee.query.filter_by(id=item.coffee_id).first().coffee_name} is out of stock!"
+        elif item.game_id is not None and VideoGame.query.filter_by(id=item.game_id).first().stock <= 0:
+            error_message = f"{VideoGame.query.filter_by(id=item.game_id).first().game_name} is out of stock!"
+        elif item.book_id is not None and Book.query.filter_by(id=item.book_id).first().stock <= 0:
+            error_message = f"{Book.query.filter_by(id=item.book_id).first().book_name} is out of stock!"
+        if error_message is not None:
+            return render_template('checkout.html',  total=0,
+                    cart_items=cart_items, 
+                    coffee_class=coffee_class, 
+                    book_class=book_class, 
+                    game_class=game_class,
+                    cart_id=cart_id,
+                    error_message=error_message)
     db.session.add(new_order)
     db.session.commit()
     db.session.flush()
@@ -452,6 +471,14 @@ def checkout():
     total = 0
     for item in cart_items:
             total = total + item.quantity * item.price
+            for item in cart_items:
+                if item.coffee_id is not None:
+                    Coffee.query.filter_by(id=item.coffee_id).first().stock = Coffee.stock - item.quantity
+                elif item.game_id is not None:
+                    VideoGame.query.filter_by(id=item.game_id).first().stock = VideoGame.stock - item.quantity
+                elif item.book_id is not None:
+                    Book.query.filter_by(id=item.book_id).first().stock = Book.stock - item.quantity
+    db.session.commit()
     return render_template('checkout.html',  total=total, 
                            order_number=order_number, 
                            cart_items=cart_items, 
