@@ -153,8 +153,8 @@ with app.app_context():
         db.session.add(Coffee(coffee_name='Second Breakfast', fav_count=0, stock=10, description=desc[2], image=desc[1] ))
         desc = description_choice("The Roast of Leaves")
         db.session.add(Coffee(coffee_name='The Roast of Leaves', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
-        desc = description_choice("At the Cups of Madness")
-        db.session.add(Coffee(coffee_name='At the Cups of Madness', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
+        desc = description_choice("Mercer's Blend")
+        db.session.add(Coffee(coffee_name="Mercer's Blend", fav_count=0, stock = 10, description=desc[2], image=desc[1]))
         desc = description_choice("The Silverhand Special")
         db.session.add(Coffee(coffee_name='The Silverhand Special', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
         desc = description_choice("Western Nostalgia")
@@ -163,7 +163,7 @@ with app.app_context():
         db.session.add(Coffee(coffee_name='Potion of Energy', fav_count=0, stock = 10, description=desc[2], image=desc[1]))
         db.session.add(Book(book_name='The Lord of the Rings', stock = 10))
         db.session.add(Book(book_name='The House of Leaves', stock = 10))
-        db.session.add(Book(book_name='At the Mountains of Madness', stock = 10))
+        db.session.add(Book(book_name='Do Androids Dream of Electric Sheep?', stock = 10))
         db.session.add(VideoGame(game_name='Cyberpunk 2077', stock = 10))
         db.session.add(VideoGame(game_name='Red Dead Redemption 2', stock = 10))
         db.session.add(VideoGame(game_name='Minecraft', stock = 10))
@@ -213,9 +213,9 @@ class SelectHoLItemsForm(FlaskForm):
     product_choice = SelectField(choices=[('The Roast of Leaves', 'The Roast of Leaves'), ('The House of Leaves','The House of Leaves')])
     submit = SubmitField('Add to Cart')
 
-"""At the Mountains of Madness"""
+"""Do Androids Dream of Electric Sheep?"""
 class SelectAtMoMItemsForm(FlaskForm):
-    product_choice = SelectField(choices=[('At the Cups of Madness','At the Cups of Madness'), ('At the Mountains of Madness','At the Mountains of Madness')])
+    product_choice = SelectField(choices=[("Mercer's Blend","Mercer's Blend"), ('Do Androids Dream of Electric Sheep?','Do Androids Dream of Electric Sheep?')])
     submit = SubmitField('Add to Cart')
 
 class SelectCyberPunkItemsForm(FlaskForm):
@@ -291,9 +291,7 @@ def signin():
                 login_user(user)
                 return redirect(url_for('secretpage'))
     elif request.method == 'GET':
-        print("navbar")
         return render_template('signin.html', form=form) #User clicks navbar link
-    print("incorrect")
     return render_template('signin.html', error_message=Markup("<h2>Incorrect username or password"), form=form) #wrong username or password
 
 
@@ -419,12 +417,14 @@ def SecondBreakfast():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         
     if drop_down.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         product = drop_down.product_choice.data
         if product == 'Second Breakfast':
             add_coffee_to_cart(db, 'Second Breakfast', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The Lord of the Rings':
             add_book_to_cart(db, 'The Lord of the Rings', current_user.cart, Book, CartItem, 89.99)
-    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
 
 
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
@@ -442,18 +442,20 @@ def TheRoastOfLeaves():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         
     if drop_down.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         product = drop_down.product_choice.data
         if product == 'The Roast of Leaves':
             add_coffee_to_cart(db, 'The Roast of Leaves', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'The House of Leaves':
             add_book_to_cart(db, 'The House of Leaves', current_user.cart, Book, CartItem, 29.99)
-    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
 
-@app.route('/AtTheCupsOfMadness', methods=['GET', 'POST'])
-def AtTheCupsOfMadness():
+@app.route('/MercersBlend', methods=['GET', 'POST'])
+def MercersBlend():
     drop_down = SelectAtMoMItemsForm(prefix='cart')
     favorite_button = FavoriteButton(prefix='favorite')
-    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="At the Cups of Madness").first()
+    current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Mercer's Blend").first()
     if current_user.is_authenticated:
         favorite_info:list = favoriting_info(db, current_user, favorite_button, current_coffee) #index 0 is current_coffee row, index 1 is the modified favorite button
         fav_unfav_button = favorite_info[1]
@@ -464,12 +466,14 @@ def AtTheCupsOfMadness():
         fav_unfav_button = favorite_info[1]
         
     if drop_down.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         product = drop_down.product_choice.data
-        if product == 'At the Cups of Madness':
-            add_coffee_to_cart(db, 'At the Cups of Madness', current_user.cart, Coffee, CartItem, 19.99)
-        elif product == 'At the Mountains of Madness':
-            add_book_to_cart(db, 'At the Mountains of Madness', current_user.cart, Book, CartItem, 25.99)
-    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+        if product == "Mercer's Blend":
+            add_coffee_to_cart(db, "Mercer's Blend", current_user.cart, Coffee, CartItem, 19.99)
+        elif product == 'Do Androids Dream of Electric Sheep?':
+            add_book_to_cart(db, 'Do Androids Dream of Electric Sheep?', current_user.cart, Book, CartItem, 25.99)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
 
 @app.route('/TheSilverhandSpecial', methods=['GET', 'POST'])
 def silver_hand_special():
@@ -486,12 +490,14 @@ def silver_hand_special():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         
     if drop_down.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         product = drop_down.product_choice.data
         if product == 'The Silverhand Special':
             add_coffee_to_cart(db, 'The Silverhand Special', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Cyberpunk 2077':
             add_game_to_cart(db, 'Cyberpunk 2077', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
 
 @app.route('/WesternNostalgia', methods=['GET', 'POST'])
 def western_nostalgia():
@@ -508,12 +514,14 @@ def western_nostalgia():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         
     if drop_down.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         product = drop_down.product_choice.data
         if product == 'Western Nostalgia':
             add_coffee_to_cart(db, 'Western Nostalgia', current_user.cart, Coffee, CartItem, 19.99)
         elif product == 'Red Dead Redemption 2':
             add_game_to_cart(db, 'Red Dead Redemption 2', current_user.cart, VideoGame, CartItem, 59.99)
-    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
 
 @app.route('/PotionOfEnergy', methods=['GET', 'POST'])
 def potion_of_energy():
@@ -530,12 +538,14 @@ def potion_of_energy():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         
     if drop_down.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("signin"))
         product = drop_down.product_choice.data
         if product == 'Potion of Energy':
             add_coffee_to_cart(db, 'Potion of Energy', current_user.cart, Coffee, CartItem, 19.99)
         if product == 'Minecraft':
             add_game_to_cart(db, 'Minecraft', current_user.cart, VideoGame, CartItem, 19.99)
-    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button)
+    return render_template('CoffeePage.html', coffee_name=current_coffee.coffee_name, coffee_image=current_coffee.image, coffee_description=current_coffee.description, drop_down=drop_down, fav_unfav_button=fav_unfav_button, fav_number=current_coffee.fav_count)
 
 if __name__ == "__main__":
     app.run(debug=True)

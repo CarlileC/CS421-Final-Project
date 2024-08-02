@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <script src="{{url_for('static', filename='sort.js')}}"></script>
   <title>Book and a Brew</title>
 </head>
 
-<body>
+<body onload="house()">
   {% extends "base.html" %}
   {% block content %}
   <h2 class="title">{{coffee_name}}</h2>
@@ -17,7 +17,8 @@
       <img src={{coffee_image}}>
     </div>
     <div class="coffeeText">
-      <p> {{coffee_description}}<br></p>
+      <p id="coffeeDescription"> {{coffee_description}}<br></p>
+      <p>Current Favorites: {{fav_number}}</p>
           {% if current_user.is_authenticated %}
           <form action="#" method="post">
             {{ fav_unfav_button.hidden_tag() }}

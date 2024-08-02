@@ -18,3 +18,9 @@ function sort(){
         parentDiv.appendChild(returnItems[i]); 
     }
 }
+
+function house(){
+    var description = document.getElementById('coffeeDescription').innerText
+    blueHouse = description.replaceAll("house", "<span style='color:blue;'>house</span>").replaceAll("minotaur", "<span style='color:red;'>Minotaur</span>")
+    document.getElementById('coffeeDescription').innerHTML = blueHouse
+}
