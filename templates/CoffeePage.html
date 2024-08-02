@@ -26,12 +26,7 @@
             {{ fav_unfav_button.submit }}
           </form>
           {% endif %}      <div class="comments">
-        {% for comment in user_comments_list%}
-        <div>
-          <div>{{comment.summary}}</div>
-          <div>{{comment.comment}}</div>
-        </div>
-        {% endfor %}
+
       </div>
 
           <!-- Form to add items into the cart -->
@@ -60,6 +55,13 @@
 
     </div>
   </div>
+  <h2 class="commentsHeader">Comments</h2>
+  {% for comment in user_comments_list%}
+  <div id = "comments" class="comments">
+    <div>{{comment.summary}}</div>
+    <div>{{comment.comment}}</div>
+  </div>
+  {% endfor %}
   {% endblock %}
 </body>
 </html>

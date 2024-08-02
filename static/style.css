@@ -254,7 +254,6 @@ padding-left: 10px;
 padding-top: 10px;
 margin-right: 0px;
 margin-left: 400px;
-border: 1px solid lightgray;
 font-family: Alata;
 }
 
@@ -264,4 +263,12 @@ font-family: Alata;
 
 .ordersDiv{
     padding: 20px 150px;
+}
+
+.commentsHeader{
+    padding-left: 600px;
+}
+
+.comments{
+    padding-left: 200px;
 }

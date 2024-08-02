@@ -470,7 +470,7 @@ def CoffeeList():
 @app.route('/SecondBreakfast', methods=['GET', 'POST'])
 def SecondBreakfast():
     drop_down = SelectLotrItemsForm(prefix='cart')
-    coffee_id = Coffee.query.filter_by(coffeeName='Second Breakfast').first().id
+    coffee_id = Coffee.query.filter_by(coffee_name='Second Breakfast').first().id
     user = current_user
     favorite_button = FavoriteButton(prefix='favorite')
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Second Breakfast").first()
@@ -500,7 +500,7 @@ def SecondBreakfast():
 @app.route('/TheRoastOfLeaves', methods=['GET', 'POST'])
 def TheRoastOfLeaves():
     drop_down = SelectHoLItemsForm(prefix='cart')
-    coffee_id = Coffee.query.filter_by(coffeeName='The Roast of Leaves').first().id
+    coffee_id = Coffee.query.filter_by(coffee_name='The Roast of Leaves').first().id
     favorite_button = FavoriteButton(prefix='favorite')
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="The Roast of Leaves").first()
     if current_user.is_authenticated:
@@ -540,7 +540,7 @@ def MercersBlend():
         fav_or_unfav(db, favorite_info[1], favorite_info[0], current_user, Favorite, Coffee)
         fav_unfav_button = favorite_info[1]
         
-    coffee_id = Coffee.query.filter_by(coffeeName="Mercer's Blend").first().id
+    coffee_id = Coffee.query.filter_by(coffee_name="Mercer's Blend").first().id
     if drop_down.validate_on_submit():
         if not current_user.is_authenticated:
             return redirect(url_for("signin"))
@@ -559,7 +559,7 @@ def MercersBlend():
 def silver_hand_special():
     drop_down = SelectCyberPunkItemsForm(prefix='cart')
 
-    coffee_id = Coffee.query.filter_by(coffeeName='The Silverhand Special').first().id
+    coffee_id = Coffee.query.filter_by(coffee_name='The Silverhand Special').first().id
     favorite_button = FavoriteButton(prefix='favorite')
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="The Silverhand Special").first()
     if current_user.is_authenticated:
@@ -589,7 +589,7 @@ def silver_hand_special():
 def western_nostalgia():
     drop_down = SelectRDRItemsForm(prefix='cart')
 
-    coffee_id = Coffee.query.filter_by(coffeeName='Western Nostalgia').first().id
+    coffee_id = Coffee.query.filter_by(coffee_name='Western Nostalgia').first().id
     favorite_button = FavoriteButton(prefix='favorite')
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Western Nostalgia").first()
     if current_user.is_authenticated:
@@ -619,7 +619,7 @@ def western_nostalgia():
 def potion_of_energy():
     drop_down = SelectMCItemsForm(prefix='cart')
 
-    coffee_id = Coffee.query.filter_by(coffeeName='Potion of Energy').first().id
+    coffee_id = Coffee.query.filter_by(coffee_name='Potion of Energy').first().id
     favorite_button = FavoriteButton(prefix='favorite')
     current_coffee = db.session.query(Coffee).filter(Coffee.coffee_name=="Potion of Energy").first()
     if current_user.is_authenticated:
