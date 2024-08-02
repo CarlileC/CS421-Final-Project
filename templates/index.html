@@ -12,11 +12,11 @@
     <div class="imageContainer">
         <img src="https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg" alt="image">
         <div class="overlayText">Coffee that <br> tells a story
-        <a href="CoffeeList.html"><p class="coffeeButton">Shop Coffee</p></a>
+        <a href="{{url_for('CoffeeList')}}"><p class="coffeeButton">Shop Coffee</p></a>
         </div>
     </div>
     <h2 id="greeting"></h2>
-    <h2>Popular Picks</h2>
+    <h2 class="popularPicksLabel">Popular Picks</h2>
     <div class="popular">
         <div class="popularCoffee">
           {{popular1}}

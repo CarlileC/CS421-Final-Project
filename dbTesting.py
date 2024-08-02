@@ -1,4 +1,4 @@
-from main import db, User, Coffee, Favorite
+from main import db, User, Coffee, Favorite, Book, VideoGame
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
@@ -14,10 +14,7 @@ from sqlalchemy import desc
 #This would normally be current_user_id = current_user.id
 
 
-user = db.session.query(Favorite).all()
+user = db.session.query(Book).all()
 
-favorite = Favorite(user_id = 2, coffee_id = 1)
-print(db.session.add(favorite))
-db.session.commit()
 # db.session.query(Favorite).filter(Favorite.user_id == current_user.id, Favorite.coffee_id == coffee_to_fav.id).first()
 print(user)

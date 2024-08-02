@@ -68,7 +68,7 @@ font-family: Alata;
 font-size: 25px;
 color:black;
 width: 50%;
-height: 30px;
+height: 60px;
 padding: 10px;
 padding-bottom: 20px;
 text-align: center;
@@ -88,8 +88,14 @@ font-family: Lusitana;
 
 .popular{
 text-align: center;
-border: 1px solid lightgray;
+/* border: 1px solid lightgray; */
 }
+
+.popularPicksLabel{
+    padding-left: 365px;
+    padding-bottom: 20px;
+}
+
 .popularCoffee{
 display: inline-block;
 padding-right: 10px;
@@ -97,7 +103,7 @@ padding-left: 10px;
 padding-top: 10px;
 margin-right: 125px;
 margin-left: 125px;
-border: 1px solid lightgray;
+/* border: 1px solid lightgray; */
 font-family: Alata;
 }
 .popularCoffee img{
@@ -107,7 +113,7 @@ height: 300px;
 
 .coffeeContainer{
 text-align: center;
-border: 1px solid lightgray;
+/* border: 1px solid lightgray; */
 }
 .coffeeContainer h2{
 text-align: left;
@@ -121,7 +127,7 @@ padding-left: 10px;
 padding-top: 10px;
 margin-right: 125px;
 margin-left: 125px;
-border: 1px solid lightgray;
+/* border: 1px solid lightgray; */
 font-family: Alata;
 }
 .coffeeElement img{
@@ -153,7 +159,7 @@ height: 500px;
 }
 
 .coffeePage{
-border: 1px solid lightgray;
+/* border: 1px solid lightgray; */
 display: grid;
 align-items: center; 
 grid-template-columns: 1fr 1fr 1fr;
@@ -172,7 +178,7 @@ padding-left: 10px;
 padding-top: 10px;
 margin-right: 125px;
 margin-left: 125px;
-border: 1px solid lightgray;
+/* border: 1px solid lightgray; */
 font-family: Alata;
 }
 .coffeePicture img{

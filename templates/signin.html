@@ -16,7 +16,7 @@
     {% else %}
     <div class="requirements">
         <h2>Welcome Back! Please sign in</h2>
-        {{errorMessage}}
+        {{error_message}}
     </div>
     <div class="container">
         <form action="#" method = "POST">
@@ -33,7 +33,7 @@
                     {{form.password.label}}{{form.password}}
                 </div>
             </div>
-            <input type="submit" value="Log In">
+            {{form.submit}}
         </form>
     </div>
     {% endif %}
