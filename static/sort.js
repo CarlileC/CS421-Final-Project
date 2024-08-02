@@ -20,10 +20,7 @@ function sort(){
 }
 
 function house(){
-    var description = document.getElementById('coffeeDescription').innerText
-    var comments = document.getElementById('comments').innerText
-    blueHouseDescription = description.replaceAll("house", "<span style='color:blue;'>house</span>").replaceAll("minotaur", "<span style='color:red;'>Minotaur</span>")
-    blueHouseComments = comments.replaceAll("house", "<span style='color:blue;'>house</span>").replaceAll("minotaur", "<span style='color:red;'>Minotaur</span>")
-    document.getElementById('coffeeDescription').innerHTML = blueHouseDescription
-    document.getElementById('comments').innerHTML = blueHouseComments
+    var description = document.getElementById('coffeeDescription').innerText;
+    blueHouseDescription = description.replaceAll("house", "<span style='color:blue;'>house</span>").replaceAll("minotaur", "<span style='color:red;'>Minotaur</span>");
+    document.getElementById('coffeeDescription').innerHTML = blueHouseDescription;
 }
