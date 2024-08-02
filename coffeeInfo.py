@@ -29,31 +29,13 @@ def description_choice(name:str):
         WARNING: If someone you know drinks this blend and does not feel a rush of empathy and connection to the rest of humanity, run and contact the police immediately!"
     elif name == 'The Silverhand Special':
         coffee_image = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkQGrg6m1XJQPJ1GMyG3DRYNqIw7krFaWgIA&s'
-        coffee_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse non volutpat nunc. Sed vitae diam quis sapien venenatis consequat vitae a est.  \
-        Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Morbi leo enim, tristique eu erat non, ullamcorper rutrum felis. \
-         Suspendisse quis laoreet libero. Maecenas dolor dolor, convallis ac mi et, vulputate fermentum erat. Sed leo tortor, dictum ut accumsan sed, mattis in dui. \
-         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse ullamcorper dui quis lacinia sodales. \
-          Integer a leo sed lorem facilisis pharetra sit amet id risus. Morbi metus eros, feugiat sit amet massa et, elementum rutrum libero. \
-          Suspendisse id leo nec metus egestas sodales vitae vitae felis. Vivamus accumsan vulputate luctus. Praesent ut finibus lectus. \
-          Donec vitae mauris at diam maximus sollicitudin."
+        coffee_description = "Fight the corporations and maintain your individuality with Johnny Silverhand's favorite bitter brew."
     elif name == 'Western Nostalgia':
         coffee_image = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRW69ccLk0atQA_ikEKj_06IcvAX8bRjAPyIw&s'
-        coffee_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse non volutpat nunc. Sed vitae diam quis sapien venenatis consequat vitae a est.  \
-        Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Morbi leo enim, tristique eu erat non, ullamcorper rutrum felis. \
-         Suspendisse quis laoreet libero. Maecenas dolor dolor, convallis ac mi et, vulputate fermentum erat. Sed leo tortor, dictum ut accumsan sed, mattis in dui. \
-         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse ullamcorper dui quis lacinia sodales. \
-          Integer a leo sed lorem facilisis pharetra sit amet id risus. Morbi metus eros, feugiat sit amet massa et, elementum rutrum libero. \
-          Suspendisse id leo nec metus egestas sodales vitae vitae felis. Vivamus accumsan vulputate luctus. Praesent ut finibus lectus. \
-          Donec vitae mauris at diam maximus sollicitudin."
+        coffee_description = "Longing for simpler times? Missing the long open expanse of land without a building in sight? Try this rustic blend and let yourself be transported back to the Wild West."
     elif name == 'Potion of Energy':
         coffee_image = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6DKnP8m8EHbfT7f5L6ixqAvHiHQxxhFtkZg&s'
-        coffee_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse non volutpat nunc. Sed vitae diam quis sapien venenatis consequat vitae a est.  \
-        Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Morbi leo enim, tristique eu erat non, ullamcorper rutrum felis. \
-         Suspendisse quis laoreet libero. Maecenas dolor dolor, convallis ac mi et, vulputate fermentum erat. Sed leo tortor, dictum ut accumsan sed, mattis in dui. \
-         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse ullamcorper dui quis lacinia sodales. \
-          Integer a leo sed lorem facilisis pharetra sit amet id risus. Morbi metus eros, feugiat sit amet massa et, elementum rutrum libero. \
-          Suspendisse id leo nec metus egestas sodales vitae vitae felis. Vivamus accumsan vulputate luctus. Praesent ut finibus lectus. \
-          Donec vitae mauris at diam maximus sollicitudin."
+        coffee_description = "If you are having trouble motivating yourself to start your next creative project, look no further than this sweet vanilla blend to give yourself an energetic boost."
     info_list = [name, coffee_image ,coffee_description]
     return info_list
 
