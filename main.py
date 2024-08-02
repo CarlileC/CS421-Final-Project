@@ -20,7 +20,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'data.sqlite')
 app.config['SQL_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = "TEMP KEY"
-app.config['FLASK_ADMIN_SWATCH'] = 'slate'
+app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 db = SQLAlchemy(app)
 Migrate(app, db)
 
@@ -28,7 +28,6 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-#THIS NEXT SECTION IS JUST TAKEN FROM LAB07, IT NEEDS TO BE CLEANED UP AND MOVED INTO A DIFFERENT FILE IDEALLY
 
 class Favorite(db.Model):
     __tablename__="Favorite"
@@ -146,7 +145,7 @@ class Cart(db.Model):
 with app.app_context():
     db.create_all()
 
-    #The next set of lines would be not be here in a live application, this is just for project purposed to make sure the database is initialized properly
+    #The next set of lines would be not be here in a live application, this is just for project purposes to make sure the database is initialized properly
     coffee = Coffee.query.filter_by(coffee_name='Second Breakfast').first()
     if not coffee:
         desc = description_choice("Second Breakfast")
